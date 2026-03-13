@@ -10,9 +10,9 @@
             --bg-dark: #020617;
             --card-bg: #0f172a;
             --border: #1e293b;
-            --primary: #6366f1; /* Indigo */
-            --secondary: #a855f7; /* Purple */
-            --accent: #f97316; /* Orange */
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #f97316;
             --success: #22c55e;
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
@@ -30,7 +30,7 @@
         }
 
         #escrowWidget {
-            max-width: 460px;
+            max-width: 480px;
             width: 90%;
             background: var(--card-bg);
             padding: 32px;
@@ -50,8 +50,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .input-group { margin-bottom: 16px; }
-
         label {
             display: block;
             margin-bottom: 6px;
@@ -63,13 +61,14 @@
         input {
             width: 100%;
             padding: 12px 16px;
+            margin-bottom: 16px;
             border-radius: 12px;
             border: 1px solid var(--border);
             background: #020617;
             color: white;
             box-sizing: border-box;
             transition: all 0.2s;
-            font-size: 15px;
+            font-family: inherit;
         }
 
         input:focus {
@@ -79,88 +78,62 @@
         }
 
         .summary {
-            margin: 24px 0;
+            margin: 20px 0;
             background: rgba(30, 41, 59, 0.5);
-            padding: 20px;
+            padding: 18px;
             border-radius: 16px;
-            border: 1px dashed var(--border);
+            border: 1px solid var(--border);
+            font-size: 14px;
         }
 
         .summary p {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            font-size: 14px;
+            margin: 8px 0;
         }
 
-        .summary strong { color: var(--accent); }
-
-        /* Knoppen */
         button {
             width: 100%;
             padding: 14px;
-            margin-top: 12px;
+            margin-top: 10px;
             border: none;
-            border-radius: 14px;
+            border-radius: 12px;
             font-weight: 600;
             font-size: 15px;
             cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
+            transition: all 0.2s;
         }
 
-        button:active { transform: scale(0.98); }
-
-        .btn-gradient {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-            margin-top: 8px;
-        }
-
-        .btn-outline:hover {
-            border-color: var(--text-dim);
-            color: white;
-        }
-
-        .payBtn {
-            background: var(--success);
-            color: white;
-            margin-top: 20px;
-        }
-
-        .payBtn:disabled {
+        .btn-initiate { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
+        .btn-connect { background: var(--primary); color: white; }
+        .btn-disconnect { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+        .btn-disconnect:hover { color: white; border-color: var(--text-dim); }
+        .btn-pay { background: var(--success); color: white; }
+        
+        .btn-pay:disabled {
             background: #1e293b;
             color: #475569;
             cursor: not-allowed;
-            box-shadow: none;
+            border: 1px solid var(--border);
         }
 
         #status {
-            margin-top: 20px;
+            margin-top: 15px;
             text-align: center;
             font-size: 13px;
-            font-weight: 500;
-            color: var(--primary);
-            padding: 10px;
-            border-radius: 8px;
-            background: rgba(99, 102, 241, 0.05);
+            color: #38bdf8;
+            min-height: 1.5em;
         }
 
-        .wallet-info {
+        .wallet-details {
             font-size: 11px;
             color: var(--text-dim);
-            margin-top: 12px;
             text-align: center;
+            margin-top: 15px;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
             line-height: 1.6;
         }
-
-        hr { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
     </style>
 </head>
 <body>
@@ -169,158 +142,179 @@
     <h2>Secure Escrow</h2>
 
     <form id="escrowForm">
-        <div class="input-group">
-            <label>Buyer & Seller Names</label>
-            <div style="display:flex; gap:10px;">
-                <input id="buyer" placeholder="Buyer" required>
-                <input id="seller" placeholder="Seller" required>
-            </div>
-        </div>
+        <label>Buyer Name</label>
+        <input id="buyer" placeholder="Full name" required>
 
-        <div class="input-group">
-            <label>Transaction Details</label>
-            <input id="email" type="email" placeholder="Email Address" required style="margin-bottom:10px;">
-            <input id="asset" placeholder="Asset (e.g. Domain, Design)">
-        </div>
+        <label>Seller Name</label>
+        <input id="seller" placeholder="Full name" required>
 
-        <div class="input-group">
-            <label>Amount (USDC)</label>
-            <input id="amount" placeholder="0.00" required>
-        </div>
+        <label>Email & Asset</label>
+        <input id="email" type="email" placeholder="Email" required>
+        <input id="asset" placeholder="Asset description">
 
-        <button type="button" class="btn-gradient" onclick="prepareDeal()">
-            Review Transaction
+        <label>Deposit Amount (USDC)</label>
+        <input id="amount" placeholder="1000.00" required>
+
+        <button type="button" class="btn-initiate" onclick="prepareDeal()">
+            Review & Initiate
         </button>
     </form>
 
     <div class="summary">
-        <p><span>ID</span><strong id="dealID">-</strong></p>
+        <p><span>Deal ID</span><strong id="dealID">-</strong></p>
+        <p><span>Buyer</span><span id="sumBuyer">-</span></p>
+        <p><span>Seller</span><span id="sumSeller">-</span></p>
         <p><span>Asset</span><span id="sumAsset">-</span></p>
-        <p><span>Total to Pay</span><span style="color:var(--success); font-weight:700;"><span id="sumAmount">0.00</span> USDC</span></p>
-        <p style="font-size:11px; color:var(--text-dim);">Fee (1.5%) included in total</p>
+        <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+        <p>
+            <span>Total</span>
+            <span style="color:var(--success); font-weight:bold;">
+                <span id="sumAmount">0.00</span> USDC
+            </span>
+        </p>
+        <p style="font-size:11px; color:var(--text-dim);">Includes 1.5% fee</p>
     </div>
 
-    <div id="walletActions">
-        <button id="btnConnect" class="btn-gradient" onclick="connectWallet()">Connect Wallet</button>
-        <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>Confirm & Pay</button>
-        <button id="btnDisconnect" class="btn-outline" onclick="disconnectWallet()">Disconnect</button>
+    <button id="btnConnect" class="btn-connect" onclick="connectWallet()">Connect Wallet</button>
+    
+    <button id="btnDeposit" class="btn-pay" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
+    
+    <button id="btnDisconnect" class="btn-disconnect" onclick="disconnectWallet()">Disconnect</button>
+
+    <div id="status">Fill the form to start</div>
+    
+    <div class="wallet-details">
+        Wallet: <span id="walletDisplay">Not connected</span><br>
+        Network: <span id="networkDisplay">Unknown</span> | Balance: <span id="balanceDisplay">-</span>
     </div>
 
-    <div id="status">Ready to start</div>
-
-    <div class="wallet-info">
-        Wallet: <span id="walletDisplay">...</span><br>
-        Network: <span id="networkDisplay">...</span> | Balance: <span id="balanceDisplay">-</span>
-    </div>
-
-    <div id="txLink" style="text-align:center; margin-top:15px;"></div>
+    <div id="txLink" style="text-align:center;margin-top:10px;"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
 <script>
-    /* TECHNISCHE LOGICA (ONGEWIJZIGD) */
-    let provider=null;
-    let signer=null;
-    let finalAmount="0";
-    let dealHash="";
+let provider=null;
+let signer=null;
+let finalAmount="0";
+let dealHash="";
 
-    const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-    const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
+const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 
-    function parseAmount(value){
-        let v=value.trim().replace(/\s/g,"");
-        const comma=v.lastIndexOf(",");
-        const dot=v.lastIndexOf(".");
-        if(comma>-1 && dot>-1){
-            if(comma>dot){ v=v.replace(/\./g,"").replace(",","."); }
-            else{ v=v.replace(/,/g,""); }
-        }else if(comma>-1){ v=v.replace(",","."); }
-        v=v.replace(/[^0-9.]/g,"");
-        let num=Number(v);
-        if(!isFinite(num) || num<=0){ throw new Error("Invalid amount"); }
-        return Number(num.toFixed(6));
+function parseAmount(value){
+    let v=value.trim().replace(/\s/g,"");
+    const comma=v.lastIndexOf(",");
+    const dot=v.lastIndexOf(".");
+    if(comma>-1 && dot>-1){
+        if(comma>dot){ v=v.replace(/\./g,"").replace(",","."); }
+        else{ v=v.replace(/,/g,""); }
+    }else if(comma>-1){ v=v.replace(",","."); }
+    v=v.replace(/[^0-9.]/g,"");
+    let num=Number(v);
+    if(!isFinite(num) || num<=0){ throw new Error("Invalid amount"); }
+    return Number(num.toFixed(6));
+}
+
+function createHash(str){
+    return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(str));
+}
+
+function prepareDeal(){
+    try{
+        const buyer=document.getElementById("buyer").value.trim();
+        const seller=document.getElementById("seller").value.trim();
+        const asset=document.getElementById("asset").value.trim();
+        const amount=parseAmount(document.getElementById("amount").value);
+
+        const fee=Number((amount*0.015).toFixed(6));
+        const total=Number((amount+fee).toFixed(6));
+
+        finalAmount=total.toFixed(6);
+        const deal="MRD-"+Math.floor(Date.now()/1000);
+        dealHash=createHash(buyer+seller+asset+finalAmount);
+
+        document.getElementById("dealID").innerText=deal;
+        document.getElementById("sumBuyer").innerText=buyer;
+        document.getElementById("sumSeller").innerText=seller;
+        document.getElementById("sumAsset").innerText=asset || "Not specified";
+        document.getElementById("sumAmount").innerText=total.toLocaleString("en-US",{minimumFractionDigits:2});
+        document.getElementById("status").innerText="Escrow prepared. Connect wallet.";
+    }catch(err){
+        alert(err.message);
     }
+}
 
-    function createHash(str){ return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(str)); }
-
-    function prepareDeal(){
-        try{
-            const buyer=document.getElementById("buyer").value.trim();
-            const seller=document.getElementById("seller").value.trim();
-            const asset=document.getElementById("asset").value.trim();
-            const amount=parseAmount(document.getElementById("amount").value);
-            const fee=Number((amount*0.015).toFixed(6));
-            const total=Number((amount+fee).toFixed(6));
-            finalAmount=total.toFixed(6);
-            const deal="MRD-"+Math.floor(Date.now()/1000);
-            dealHash=createHash(buyer+seller+asset+finalAmount);
-            document.getElementById("dealID").innerText=deal;
-            document.getElementById("sumAsset").innerText=asset || "General Escrow";
-            document.getElementById("sumAmount").innerText=total.toLocaleString("en-US",{minimumFractionDigits:2});
-            document.getElementById("status").innerText="Transaction ready. Please connect wallet.";
-        }catch(err){ alert(err.message); }
-    }
-
-    async function connectWallet(){
-        if (typeof window.ethereum === 'undefined') {
-            const statusDiv = document.getElementById("status");
-            statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:var(--accent);text-decoration:underline;">Install MetaMask to continue</a>';
-            if(confirm("MetaMask not found. Go to download page?")){ window.open("https://metamask.io/download/", "_blank"); }
-            return;
+async function connectWallet(){
+    if (typeof window.ethereum === 'undefined') {
+        const statusDiv = document.getElementById("status");
+        statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:var(--accent);text-decoration:underline;">MetaMask niet gevonden. Klik hier om te installeren.</a>';
+        if(confirm("MetaMask is niet geïnstalleerd. Wilt u naar de downloadpagina gaan?")){
+            window.open("https://metamask.io/download/", "_blank");
         }
-        try{
-            const accounts=await ethereum.request({method:"eth_requestAccounts"});
+        return;
+    }
+    try{
+        const accounts=await ethereum.request({method:"eth_requestAccounts"});
+        provider=new ethers.providers.Web3Provider(window.ethereum);
+        signer=provider.getSigner();
+        const address=accounts[0];
+        document.getElementById("walletDisplay").innerText=address.substring(0,6)+"..."+address.substring(address.length-4);
+        
+        const network=await provider.getNetwork();
+        document.getElementById("networkDisplay").innerText=network.chainId===1 ? "Ethereum Mainnet" : "Wrong Network";
+
+        if(network.chainId!==1){
+            await ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x1"}]});
             provider=new ethers.providers.Web3Provider(window.ethereum);
             signer=provider.getSigner();
-            const address=accounts[0];
-            document.getElementById("walletDisplay").innerText=address.substring(0,6)+"..."+address.substring(address.length-4);
-            const network=await provider.getNetwork();
-            document.getElementById("networkDisplay").innerText=network.chainId===1 ? "Ethereum" : "Wrong Network";
-            if(network.chainId!==1){
-                await ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x1"}]});
-                provider=new ethers.providers.Web3Provider(window.ethereum);
-                signer=provider.getSigner();
-                document.getElementById("networkDisplay").innerText="Ethereum";
-            }
-            const abi=["function balanceOf(address) view returns(uint256)"];
-            const contract=new ethers.Contract(USDC_ADDRESS, abi, provider);
-            const bal=await contract.balanceOf(address);
-            const formatted=Number(ethers.utils.formatUnits(bal,6)).toLocaleString("en-US",{minimumFractionDigits:2});
-            document.getElementById("balanceDisplay").innerText=formatted+" USDC";
-            document.getElementById("btnDeposit").disabled=false;
-            document.getElementById("status").innerText="Wallet Connected";
-        }catch(err){ console.error(err); alert("Connection failed"); }
-    }
-
-    function disconnectWallet(){
-        provider=null; signer=null;
-        document.getElementById("walletDisplay").innerText="...";
-        document.getElementById("networkDisplay").innerText="...";
-        document.getElementById("balanceDisplay").innerText="-";
-        document.getElementById("btnDeposit").disabled=true;
-        document.getElementById("status").innerText="Wallet Disconnected";
-    }
-
-    async function sendPayment(){
-        if(!signer){ alert("Connect wallet first"); return; }
-        try{
-            const abi=["function transfer(address to,uint256 amount) returns(bool)"];
-            const contract=new ethers.Contract(USDC_ADDRESS, abi, signer);
-            const value=ethers.utils.parseUnits(finalAmount,6);
-            const tx=await contract.transfer(RECEIVER_ADDRESS, value);
-            document.getElementById("status").innerText="Processing Transaction...";
-            const receipt=await tx.wait();
-            document.getElementById("status").innerText="Payment Successful!";
-            document.getElementById("btnDeposit").innerText="Paid ✔";
-            const link="https://etherscan.io/tx/"+receipt.transactionHash;
-            document.getElementById("txLink").innerHTML='<a href="'+link+'" target="_blank" style="color:var(--primary);font-size:12px;">View on Etherscan</a>';
-        }catch(err){ 
-            console.error(err); 
-            document.getElementById("status").innerText="Transaction failed or rejected"; 
+            document.getElementById("networkDisplay").innerText="Ethereum Mainnet";
         }
-    }
-</script>
 
+        const abi=["function balanceOf(address) view returns(uint256)"];
+        const contract=new ethers.Contract(USDC_ADDRESS, abi, provider);
+        const bal=await contract.balanceOf(address);
+        const formatted=Number(ethers.utils.formatUnits(bal,6)).toLocaleString("en-US",{minimumFractionDigits:2});
+
+        document.getElementById("balanceDisplay").innerText=formatted+" USDC";
+        document.getElementById("btnDeposit").disabled=false;
+        document.getElementById("status").innerText="Wallet connected";
+    }catch(err){
+        console.error(err);
+        alert("Wallet connection failed");
+    }
+}
+
+function disconnectWallet(){
+    provider=null;
+    signer=null;
+    document.getElementById("walletDisplay").innerText="Not connected";
+    document.getElementById("networkDisplay").innerText="Unknown";
+    document.getElementById("balanceDisplay").innerText="-";
+    document.getElementById("btnDeposit").disabled=true;
+    document.getElementById("status").innerText="Wallet disconnected";
+}
+
+async function sendPayment(){
+    if(!signer){ alert("Connect wallet first"); return; }
+    try{
+        const abi=["function transfer(address to,uint256 amount) returns(bool)"];
+        const contract=new ethers.Contract(USDC_ADDRESS, abi, signer);
+        const value=ethers.utils.parseUnits(finalAmount,6);
+        
+        const tx=await contract.transfer(RECEIVER_ADDRESS, value);
+        document.getElementById("status").innerText="Waiting for confirmation...";
+        const receipt=await tx.wait();
+
+        document.getElementById("status").innerText="Escrow deposit successful";
+        document.getElementById("btnDeposit").innerText="Paid ✔";
+        const link="https://etherscan.io/tx/"+receipt.transactionHash;
+        document.getElementById("txLink").innerHTML='<a href="'+link+'" target="_blank" style="color:#38bdf8">View on Etherscan</a>';
+    }catch(err){
+        console.error(err);
+        document.getElementById("status").innerText="Transaction failed or rejected";
+    }
+}
+</script>
 </body>
 </html>
