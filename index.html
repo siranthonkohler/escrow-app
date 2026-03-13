@@ -277,13 +277,10 @@ alert(err.message);
 async function connectWallet(){
 
 if(!window.ethereum){
-
-if(confirm("MetaMask is not installed.\n\nInstall MetaMask to continue with the escrow transaction.\n\nClick OK to install.")){
-window.open("https://metamask.io/download/","_blank");
+if(confirm("MetaMask is not installed.\n\nClick OK to install MetaMask.")){
+window.location.href="https://metamask.io/download/";
 }
-
 return;
-
 }
 
 try{
