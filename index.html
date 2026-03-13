@@ -165,8 +165,8 @@
         <div class="input-group">
             <label>Buyer & Seller Names</label>
             <div style="display:flex; gap:10px;">
-                <input id="buyer" placeholder="Buyer" required>
-                <input id="seller" placeholder="Seller" required>
+                <input id="buyer" placeholder="Buyer Name" required>
+                <input id="seller" placeholder="Seller Name" required>
             </div>
         </div>
 
@@ -187,22 +187,21 @@
     </form>
 
     <div class="summary">
-        <p><span>ID</span><strong id="dealID">-</strong></p>
+        <p><span>Deal ID</span><strong id="dealID">-</strong></p>
         <p><span>Buyer</span><span id="sumBuyer">-</span></p>
         <p><span>Seller</span><span id="sumSeller">-</span></p>
         <p><span>Asset</span><span id="sumAsset">-</span></p>
         <hr>
-        <p><span>Total to Pay</span><span style="color:var(--success); font-weight:700;"><span id="sumAmount">0.00</span> USDC</span></p>
-        <p style="font-size:11px; color:var(--text-dim);">Fee (1.5%) included in total</p>
+        <p><span>Total</span><span style="color:var(--success); font-weight:700;"><span id="sumAmount">0.00</span> USDC</span></p>
     </div>
 
     <div id="walletActions">
         <button id="btnConnect" class="btn-gradient" onclick="connectWallet()">Connect Wallet</button>
-        <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>Confirm & Pay</button>
+        <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
         <button id="btnDisconnect" class="btn-outline" onclick="disconnectWallet()">Disconnect</button>
     </div>
 
-    <div id="status">Fill form to initiate</div>
+    <div id="status">Ready to start</div>
 
     <div class="wallet-info">
         Wallet: <span id="walletDisplay">Not connected</span><br>
@@ -246,65 +245,94 @@
             document.getElementById("sumSeller").innerText = seller;
             document.getElementById("sumAsset").innerText = asset || "General Asset";
             document.getElementById("sumAmount").innerText = Number(total).toLocaleString("en-US", {minimumFractionDigits: 2});
-            document.getElementById("status").innerText = "Ready. Connect wallet to pay.";
+            document.getElementById("status").innerText = "Deal prepared. Connect wallet.";
         } catch (err) { alert(err.message); }
     }
 
     async function connectWallet() {
-        if (!window.ethereum) {
+        if (typeof window.ethereum === 'undefined') {
             document.getElementById("status").innerText = "Installeer MetaMask";
             return;
         }
+
         try {
-            const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-            provider = new ethers.providers.Web3Provider(window.ethereum);
+            // Forceer een popup van MetaMask als deze niet opent
+            const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+            
+            // Initialiseer provider opnieuw om zeker te zijn van actuele staat
+            provider = new ethers.providers.Web3Provider(window.ethereum, "any");
             signer = provider.getSigner();
+            
             const address = accounts[0];
-            document.getElementById("walletDisplay").innerText = address.substring(0, 6) + "..." + address.substring(address.length - 4);
+            document.getElementById("walletDisplay").innerText = address.substring(0,6) + "..." + address.substring(address.length-4);
 
             const network = await provider.getNetwork();
+            document.getElementById("networkDisplay").innerText = network.chainId === 1 ? "Ethereum" : "Wrong Network";
+
             if (network.chainId !== 1) {
-                try {
-                    await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x1" }] });
-                } catch (e) { alert("Switch naar Ethereum Mainnet aub."); }
+                await window.ethereum.request({
+                    method: "wallet_switchEthereumChain",
+                    params: [{ chainId: "0x1" }]
+                });
             }
-            
+
             const abi = ["function balanceOf(address) view returns(uint256)"];
             const contract = new ethers.Contract(USDC_ADDRESS, abi, provider);
             const bal = await contract.balanceOf(address);
-            document.getElementById("balanceDisplay").innerText = Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
+            
+            document.getElementById("balanceDisplay").innerText = 
+                Number(ethers.utils.formatUnits(bal, 6)).toLocaleString("en-US", {minimumFractionDigits: 2}) + " USDC";
+            
             document.getElementById("btnDeposit").disabled = false;
-            document.getElementById("status").innerText = "Connected & Ready";
-        } catch (err) { console.error(err); }
+            document.getElementById("status").innerText = "Wallet connected";
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById("status").innerText = "Verbinding mislukt of geweigerd.";
+        }
     }
 
     async function sendPayment() {
-        if (!signer) return;
+        if (!window.ethereum) return;
+        
         try {
-            document.getElementById("status").innerText = "Transactie voorbereiden...";
+            // Altijd provider/signer verversen voor de transactie
+            const tempProvider = new ethers.providers.Web3Provider(window.ethereum);
+            const tempSigner = tempProvider.getSigner();
+
             const abi = ["function transfer(address to, uint256 amount) returns (bool)"];
-            const contract = new ethers.Contract(USDC_ADDRESS, abi, signer);
+            const contract = new ethers.Contract(USDC_ADDRESS, abi, tempSigner);
             const value = ethers.utils.parseUnits(finalAmount, 6);
 
-            // Veiligheidscheck: schat gas en voeg marge toe om rejection te voorkomen
-            const gasEst = await contract.estimateGas.transfer(RECEIVER_ADDRESS, value).catch(() => ethers.BigNumber.from(100000));
+            document.getElementById("status").innerText = "Bevestig de transactie in MetaMask...";
             
+            // Schat gas voor USDC transfer
+            const gasPrice = await tempProvider.getGasPrice();
             const tx = await contract.transfer(RECEIVER_ADDRESS, value, {
-                gasLimit: gasEst.add(10000) // 10k extra gas marge
+                gasLimit: 100000, // Hard limit voor veiligheid op mainnet
+                gasPrice: gasPrice
             });
 
             document.getElementById("status").innerText = "Wachten op blockchain...";
             const receipt = await tx.wait();
-            document.getElementById("status").innerText = "Betaling geslaagd!";
-            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--primary)">Bekijk op Etherscan</a>`;
+            
+            document.getElementById("status").innerText = "Betaling succesvol!";
+            document.getElementById("btnDeposit").innerText = "BETAALD ✔";
+            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--primary)">Transactie op Etherscan</a>`;
+
         } catch (err) {
             console.error(err);
-            document.getElementById("status").innerText = "Geweigerd door wallet of onvoldoende gas/fondsen.";
+            document.getElementById("status").innerText = "Transactie mislukt of geannuleerd.";
         }
     }
 
     function disconnectWallet() {
-        location.reload(); // Snelste manier om staat te resetten
+        provider = null;
+        signer = null;
+        document.getElementById("walletDisplay").innerText = "Not connected";
+        document.getElementById("balanceDisplay").innerText = "-";
+        document.getElementById("btnDeposit").disabled = true;
+        document.getElementById("status").innerText = "Verbinding verbroken.";
     }
 </script>
 </body>
