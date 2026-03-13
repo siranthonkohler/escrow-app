@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Escrow Deposit</title>
+<title>Escrow Deposit (USDC)</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
@@ -36,6 +36,7 @@ border:1px solid #1e293b;
 h2{
 text-align:center;
 margin-bottom:25px;
+font-weight:600;
 }
 
 .summaryBox{
@@ -73,9 +74,17 @@ background:#6366f1;
 color:white;
 }
 
+.connectBtn:hover{
+background:#4f46e5;
+}
+
 .payBtn{
 background:#22c55e;
 color:white;
+}
+
+.payBtn:hover:not(:disabled){
+background:#16a34a;
 }
 
 .payBtn:disabled{
@@ -98,6 +107,7 @@ border:1px dashed #334155;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -111,7 +121,7 @@ border:1px dashed #334155;
 <p><span class="label">Deal ID</span><strong id="dealID">Loading...</strong></p>
 <p><span class="label">Buyer</span><span id="buyer">-</span></p>
 <p><span class="label">Seller</span><span id="seller">-</span></p>
-<p><span class="label">Asset</span><span id="assetType">-</span></p>
+<p><span class="label">Asset Type</span><span id="assetType">-</span></p>
 
 <hr style="border:0;border-top:1px solid #334155;margin:15px 0;">
 
@@ -129,8 +139,13 @@ Includes 1.5% fee
 </div>
 
 <div class="summaryBox wallet-info">
+
 <small style="color:#94a3b8">Connected Wallet</small><br>
-<span id="wallet" style="font-family:monospace;font-size:11px;">Not connected</span>
+
+<span id="wallet" style="font-family:monospace;font-size:11px;">
+Not connected
+</span>
+
 </div>
 
 <button id="btnMetaMask" class="connectBtn" onclick="connectMetaMask()">
@@ -142,7 +157,7 @@ Confirm Escrow Deposit
 </button>
 
 <div id="status">
-Please connect your wallet
+Please connect your wallet to proceed
 </div>
 
 </div>
@@ -155,47 +170,57 @@ Please connect your wallet
 let provider;
 let signer;
 
-const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
+const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 
-const REQUIRED_CHAIN="0x1";
+const REQUIRED_CHAIN = "0x1";
 
-let finalTotalString="0";
+let finalTotalString = "0";
+
 
 
 function loadDealData(){
 
-const params=new URLSearchParams(window.location.search);
+const params = new URLSearchParams(window.location.search);
 
-const amount=params.get("amount")||"0";
+const amount = params.get("amount") || "0";
 
-const numAmount=parseFloat(amount);
+const numAmount = parseFloat(amount);
 
-if(isNaN(numAmount)||numAmount<=0){
+if(isNaN(numAmount) || numAmount <= 0){
 
-document.getElementById("status").innerText="Invalid amount";
+document.getElementById("status").innerText = "Invalid or missing amount";
+
 return;
 
 }
 
-const fee=numAmount*0.015;
-const total=numAmount+fee;
+const fee = numAmount * 0.015;
+const total = numAmount + fee;
 
-finalTotalString=total.toFixed(6);
+finalTotalString = total.toFixed(6);
 
-document.getElementById("dealID").innerText=params.get("dealID")||"N/A";
-document.getElementById("buyer").innerText=params.get("buyer")||"N/A";
-document.getElementById("seller").innerText=params.get("seller")||"N/A";
-document.getElementById("assetType").innerText=params.get("assetType")||"N/A";
+document.getElementById("dealID").innerText =
+params.get("dealID") || "N/A";
 
-document.getElementById("amountDisplay").innerText=numAmount.toFixed(2);
+document.getElementById("buyer").innerText =
+params.get("buyer") || "N/A";
 
-document.getElementById("feeDisplay").innerText=
+document.getElementById("seller").innerText =
+params.get("seller") || "N/A";
+
+document.getElementById("assetType").innerText =
+params.get("assetType") || "N/A";
+
+document.getElementById("amountDisplay").innerText =
+numAmount.toFixed(2);
+
+document.getElementById("feeDisplay").innerText =
 `Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
 
 }
 
-window.onload=loadDealData;
+window.onload = loadDealData;
 
 
 
@@ -204,15 +229,19 @@ async function switchNetwork(){
 try{
 
 await window.ethereum.request({
+
 method:"wallet_switchEthereumChain",
-params:[{chainId:REQUIRED_CHAIN}]
+
+params:[{ chainId: REQUIRED_CHAIN }]
+
 });
 
 return true;
 
-}catch(e){
+}catch(err){
 
-console.error(e);
+console.error(err);
+
 return false;
 
 }
@@ -223,58 +252,69 @@ return false;
 
 async function connectMetaMask(){
 
-const status=document.getElementById("status");
+const status = document.getElementById("status");
 
 if(!window.ethereum){
 
 alert("MetaMask not installed");
+
 return;
 
 }
 
 try{
 
-provider=new ethers.providers.Web3Provider(window.ethereum);
+provider = new ethers.providers.Web3Provider(window.ethereum);
 
-await provider.send("eth_requestAccounts",[]);
+await provider.send("eth_requestAccounts", []);
 
-signer=provider.getSigner();
+signer = provider.getSigner();
 
-const address=await signer.getAddress();
+const address = await signer.getAddress();
 
-document.getElementById("wallet").innerText=address;
+document.getElementById("wallet").innerText = address;
 
-const network=await provider.getNetwork();
 
-if(network.chainId!==1){
 
-status.innerText="Switching to Ethereum Mainnet...";
+const network = await provider.getNetwork();
 
-const switched=await switchNetwork();
+if(network.chainId !== 1){
+
+status.innerText = "Switching to Ethereum Mainnet...";
+
+const switched = await switchNetwork();
 
 if(!switched){
 
-status.innerText="Please switch to Ethereum Mainnet";
+status.innerText = "Please switch to Ethereum Mainnet";
+
 return;
 
 }
 
-provider=new ethers.providers.Web3Provider(window.ethereum);
-signer=provider.getSigner();
+provider = new ethers.providers.Web3Provider(window.ethereum);
+
+signer = provider.getSigner();
 
 }
 
-document.getElementById("btnMetaMask").style.display="none";
-document.getElementById("btnPay").disabled=false;
 
-status.innerText="Wallet connected";
-status.style.color="#22c55e";
+
+document.getElementById("btnMetaMask").style.display = "none";
+
+document.getElementById("btnPay").disabled = false;
+
+status.innerText = "Wallet connected";
+
+status.style.color = "#22c55e";
 
 }catch(err){
 
 console.error(err);
 
-status.innerText="Connection failed";
+status.innerText = "Connection failed";
+
+status.style.color = "#ef4444";
 
 }
 
@@ -284,53 +324,63 @@ status.innerText="Connection failed";
 
 async function sendPayment(){
 
-const btn=document.getElementById("btnPay");
-const status=document.getElementById("status");
+const btn = document.getElementById("btnPay");
+
+const status = document.getElementById("status");
 
 if(!signer){
 
 alert("Connect wallet first");
+
 return;
 
 }
 
 try{
 
-btn.disabled=true;
-btn.innerText="Waiting approval...";
+btn.disabled = true;
 
-const abi=[
+btn.innerText = "Waiting for approval...";
+
+const abi = [
+
 "function transfer(address to,uint256 amount) public returns(bool)"
+
 ];
 
-const contract=new ethers.Contract(
+const contract = new ethers.Contract(
+
 USDC_ADDRESS,
 abi,
 signer
+
 );
 
-const value=ethers.utils.parseUnits(finalTotalString,6);
+const value = ethers.utils.parseUnits(finalTotalString,6);
 
-const tx=await contract.transfer(RECEIVER_ADDRESS,value);
+const tx = await contract.transfer(RECEIVER_ADDRESS,value);
 
-status.innerText="Waiting blockchain confirmation...";
+status.innerText = "Waiting blockchain confirmation...";
 
 await tx.wait();
 
-status.innerText="Payment successful";
-status.style.color="#22c55e";
+status.innerText = "Payment successful";
 
-btn.innerText="Paid ✔";
+status.style.color = "#22c55e";
+
+btn.innerText = "Paid ✔";
 
 }catch(err){
 
 console.error(err);
 
-btn.disabled=false;
-btn.innerText="Confirm Escrow Deposit";
+btn.disabled = false;
 
-status.innerText="Transaction failed";
-status.style.color="#ef4444";
+btn.innerText = "Confirm Escrow Deposit";
+
+status.innerText = "Transaction failed";
+
+status.style.color = "#ef4444";
 
 }
 
