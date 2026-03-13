@@ -25,6 +25,7 @@ padding:20px;
 /* FORM */
 
 #escrowFormApp{
+font-family:'Inter',sans-serif;
 max-width:480px;
 background:#0f172a;
 color:white;
@@ -34,18 +35,18 @@ box-shadow:0 15px 40px rgba(0,0,0,0.5);
 width:100%;
 }
 
-h2{
+#escrowFormApp h2{
 text-align:center;
 margin-bottom:20px;
 }
 
-label{
+#escrowFormApp label{
 display:block;
 margin-top:15px;
 color:#cbd5e1;
 }
 
-input{
+#escrowFormApp input{
 width:100%;
 padding:12px;
 margin-top:8px;
@@ -55,7 +56,7 @@ background:#020617;
 color:white;
 }
 
-button{
+#escrowFormApp button{
 margin-top:25px;
 width:100%;
 padding:14px;
@@ -68,7 +69,7 @@ font-size:16px;
 cursor:pointer;
 }
 
-button:hover{
+#escrowFormApp button:hover{
 background:#4f46e5;
 }
 
@@ -103,8 +104,19 @@ justify-content:space-between;
 
 .label{color:#94a3b8;}
 
-.connectBtn{background:#6366f1;}
-.payBtn{background:#22c55e;}
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:14px;
+font-weight:600;
+font-size:16px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.connectBtn{background:#6366f1;color:white;}
+.payBtn{background:#22c55e;color:white;}
 
 .payBtn:disabled{
 background:#1e293b;
@@ -162,40 +174,36 @@ color:#38bdf8;
 <h2>Escrow Deposit (USDC)</h2>
 
 <div class="summaryBox">
-
-<p><span class="label">Deal ID</span> <strong id="dealID"></strong></p>
-<p><span class="label">Buyer</span> <span id="buyer"></span></p>
-<p><span class="label">Seller</span> <span id="seller"></span></p>
-<p><span class="label">Asset Type</span> <span id="assetType"></span></p>
+<p><span class="label">Deal ID</span> <strong id="dealID">Loading...</strong></p>
+<p><span class="label">Buyer</span> <span id="buyer">-</span></p>
+<p><span class="label">Seller</span> <span id="seller">-</span></p>
+<p><span class="label">Asset Type</span> <span id="assetType">-</span></p>
 
 <hr style="border:0;border-top:1px solid #334155;margin:15px 0;">
 
 <p>
 <span class="label">Amount</span>
 <span style="font-size:18px;color:#22c55e;font-weight:bold;">
-<span id="amountDisplay"></span> USDC
+<span id="amountDisplay">0.00</span> USDC
 </span>
 </p>
 
-<div id="feeDisplay" style="font-size:11px;color:#94a3b8;text-align:right;"></div>
+<div id="feeDisplay" style="font-size:11px;color:#94a3b8;text-align:right;">
+Includes 1.5% fee
+</div>
 
 </div>
 
 <div class="summaryBox wallet-info">
-
 <small style="color:#94a3b8">Connected Wallet</small><br>
-
-<span id="wallet" style="font-family:monospace;font-size:11px;">
-Not connected
-</span>
-
+<span id="wallet" style="font-family:monospace;font-size:11px;">Not connected</span>
 </div>
 
-<button id="btnMetaMask" class="connectBtn">
+<button id="btnMetaMask" class="connectBtn" onclick="connectMetaMask()">
 Connect MetaMask
 </button>
 
-<button id="btnPay" class="payBtn" disabled>
+<button id="btnPay" class="payBtn" onclick="sendPayment()" disabled>
 Confirm Escrow Deposit
 </button>
 
@@ -210,17 +218,61 @@ Please connect your wallet to proceed
 <script>
 
 let provider, signer;
-let finalTotalString="0";
 
 const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 
+let finalTotalString="0";
+
+
 function normalizeUSDC(value){
+
 const cleaned=value.replace(",",".").replace(/[^0-9.]/g,"");
+
 const num=parseFloat(cleaned);
+
 if(isNaN(num)) throw new Error("Invalid amount");
+
 return Number(num).toFixed(6);
+
 }
+
+
+/* LOAD DATA (same logic as original dapp) */
+
+function loadDealData(params){
+
+const rawAmount=params.get("amount")||"0";
+
+const normalized=normalizeUSDC(rawAmount);
+
+const numAmount=parseFloat(normalized);
+
+if(numAmount<=0){
+document.getElementById("status").innerText="❌ Invalid amount";
+document.getElementById("btnPay").disabled=true;
+return;
+}
+
+const fee=Number((numAmount*0.015).toFixed(6));
+const total=Number((numAmount+fee).toFixed(6));
+
+finalTotalString=total.toFixed(6);
+
+document.getElementById("dealID").innerText=params.get("dealID")||"N/A";
+document.getElementById("buyer").innerText=params.get("buyer")||"N/A";
+document.getElementById("seller").innerText=params.get("seller")||"N/A";
+document.getElementById("assetType").innerText=params.get("assetType")||"N/A";
+
+document.getElementById("amountDisplay").innerText=
+numAmount.toLocaleString("en-US",{minimumFractionDigits:2});
+
+document.getElementById("feeDisplay").innerText=
+`Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
+
+}
+
+
 
 /* FORM SUBMIT */
 
@@ -231,69 +283,95 @@ e.preventDefault();
 const formData=new FormData(this);
 
 const uniqueID="MRD-"+Math.floor(Date.now()/1000);
+
 formData.append("dealID",uniqueID);
 
-const buyer=formData.get("buyer");
-const seller=formData.get("seller");
-const assetType=formData.get("assetType");
-const rawAmount=formData.get("amount");
+const params=new URLSearchParams(formData);
 
 document.getElementById("escrowFormApp").style.display="none";
 document.getElementById("escrowDepositApp").style.display="block";
 
-const normalized=normalizeUSDC(rawAmount);
-const numAmount=parseFloat(normalized);
-
-const fee=Number((numAmount*0.015).toFixed(6));
-const total=Number((numAmount+fee).toFixed(6));
-
-finalTotalString=total.toFixed(6);
-
-document.getElementById("dealID").innerText=uniqueID;
-document.getElementById("buyer").innerText=buyer;
-document.getElementById("seller").innerText=seller;
-document.getElementById("assetType").innerText=assetType;
-
-document.getElementById("amountDisplay").innerText=
-numAmount.toLocaleString("en-US",{minimumFractionDigits:2});
-
-document.getElementById("feeDisplay").innerText=
-`Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
+loadDealData(params);
 
 });
 
 
 /* METAMASK */
 
-document.getElementById("btnMetaMask").onclick=async function(){
+async function connectMetaMask(){
+
+const status=document.getElementById("status");
+const btn=document.getElementById("btnMetaMask");
 
 if(!window.ethereum){
+
 alert("MetaMask not detected");
+
+status.innerText="❌ MetaMask not detected";
+
 return;
+
 }
+
+try{
+
+btn.innerText="Connecting...";
 
 const accounts=await window.ethereum.request({method:"eth_requestAccounts"});
 
 provider=new ethers.providers.Web3Provider(window.ethereum);
+
 signer=provider.getSigner();
 
 document.getElementById("wallet").innerText=accounts[0];
 
-this.style.display="none";
+btn.style.display="none";
+
 document.getElementById("btnPay").disabled=false;
 
-};
+status.innerText="✅ Wallet connected";
+
+status.style.color="#22c55e";
+
+}catch(err){
+
+status.innerText="❌ Connection failed";
+
+status.style.color="#ef4444";
+
+}
+
+}
 
 
-/* PAYMENT */
+/* PAYMENT (unchanged logic) */
 
-document.getElementById("btnPay").onclick=async function(){
+async function sendPayment(){
 
+const btn=document.getElementById("btnPay");
 const status=document.getElementById("status");
+
+if(!signer){
+
+alert("Connect wallet first");
+
+return;
+
+}
+
+try{
+
+btn.disabled=true;
+
+btn.innerText="Waiting for approval...";
+
+const usdcAbi=[
+"function transfer(address to,uint256 amount) public returns(bool)"
+];
 
 const contract=new ethers.Contract(
 USDC_ADDRESS,
-["function transfer(address to,uint256 amount) public returns(bool)"],
+usdcAbi,
 signer
 );
 
@@ -307,7 +385,25 @@ await tx.wait();
 
 status.innerText="✅ Payment Successful";
 
-};
+status.style.color="#22c55e";
+
+btn.innerText="Paid ✔";
+
+}catch(e){
+
+console.error(e);
+
+btn.disabled=false;
+
+btn.innerText="Confirm Escrow Deposit";
+
+status.innerText="❌ Transaction failed";
+
+status.style.color="#ef4444";
+
+}
+
+}
 
 </script>
 
