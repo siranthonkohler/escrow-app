@@ -51,7 +51,7 @@ button:disabled { background: #64748b; cursor: not-allowed; opacity: 0.6; }
 <label>Deposit Amount (USDC)</label>
 <input name="amount" type="number" placeholder="1000.00" step="0.01" required>
 
-<button type="submit" id="submitBtn">Initiate Escrow</button>
+<button type="button" id="submitBtn" class="connectBtn">Initiate Escrow</button>
 </form>
 
 <div class="summaryBox" id="summaryBox">
@@ -80,30 +80,28 @@ const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 let finalTotalString = "0";
 
-// Form submit → connect wallet & vul summary
-document.getElementById('escrowForm').addEventListener('submit', async function(e){
-    e.preventDefault();
+document.getElementById('submitBtn').addEventListener('click', async function(){
+    const form = document.getElementById('escrowForm');
+    const status = document.getElementById('status');
 
-    // --- INITIATE WALLET CONNECT DIRECTLY IN CLICK ---
+    // --- USER GESTURE: META MASK CONNECT ---
     if(!window.ethereum){ alert("MetaMask not detected"); return; }
     try{
-        // Geldige gesture voor MetaMask
         const accounts = await ethereum.request({ method:'eth_requestAccounts' });
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
         document.getElementById('wallet').innerText = accounts[0];
-        document.getElementById('status').innerText = "✅ Wallet connected";
-        document.getElementById('status').style.color = "#22c55e";
-
+        status.innerText = "✅ Wallet connected";
+        status.style.color = "#22c55e";
     }catch(err){
         console.error(err);
-        document.getElementById('status').innerText = "❌ MetaMask connection failed";
-        document.getElementById('status').style.color = "#ef4444";
-        return;
+        status.innerText = "❌ MetaMask connection failed";
+        status.style.color = "#ef4444";
+        return; // stop flow als connect mislukt
     }
 
     // --- VUL SUMMARY ---
-    const fd = new FormData(this);
+    const fd = new FormData(form);
     const uniqueID = "MRD-" + Math.floor(Date.now()/1000);
     const buyer = fd.get('buyer');
     const seller = fd.get('seller');
@@ -121,15 +119,14 @@ document.getElementById('escrowForm').addEventListener('submit', async function(
     document.getElementById('amountDisplay').innerText = amount.toFixed(2);
     document.getElementById('feeDisplay').innerText = `Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
 
-    // Zet form read-only
-    Array.from(this.elements).forEach(el=>el.readOnly=true);
-    document.getElementById('submitBtn').disabled=true;
+    // Zet form readonly
+    Array.from(form.elements).forEach(el => { if(el.tagName !== "BUTTON") el.readOnly = true; });
+    this.disabled = true;
 
-    // Activate pay button
+    // Activeer confirm button
     document.getElementById('btnPay').disabled = false;
 });
 
-// Pay button → USDC transfer
 document.getElementById('btnPay').addEventListener('click', async function(){
     if(!signer){ alert("Connect wallet first"); return; }
     const btn = this;
