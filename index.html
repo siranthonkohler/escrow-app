@@ -70,6 +70,7 @@
             box-sizing: border-box;
             transition: all 0.2s;
             font-size: 15px;
+            margin-bottom: 4px;
         }
 
         input:focus {
@@ -163,22 +164,28 @@
 
     <form id="escrowForm">
         <div class="input-group">
-            <label>Buyer & Seller Names</label>
-            <div style="display:flex; gap:10px;">
-                <input id="buyer" placeholder="Buyer Name" required>
-                <input id="seller" placeholder="Seller Name" required>
-            </div>
+            <label>Buyer Name</label>
+            <input id="buyer" required>
         </div>
 
         <div class="input-group">
-            <label>Transaction Details</label>
-            <input id="email" type="email" placeholder="Email Address" required style="margin-bottom:10px;">
-            <input id="asset" placeholder="Asset Description">
+            <label>Seller Name</label>
+            <input id="seller" required>
+        </div>
+
+        <div class="input-group">
+            <label>Email</label>
+            <input id="email" type="email" required>
+        </div>
+
+        <div class="input-group">
+            <label>Asset Description</label>
+            <input id="asset">
         </div>
 
         <div class="input-group">
             <label>Amount (USDC)</label>
-            <input id="amount" placeholder="0.00" required>
+            <input id="amount" placeholder="1000.00" required>
         </div>
 
         <button type="button" class="btn-gradient" onclick="prepareDeal()">
@@ -250,10 +257,10 @@
     }
 
     async function connectWallet() {
-        // --- MetaMask Check & Redirect Logic ---
+        // --- Exact Logic from source for MetaMask popup/redirect ---
         if (typeof window.ethereum === 'undefined') {
             const statusDiv = document.getElementById("status");
-            statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;font-weight:700;">MetaMask not found. Click here to install.</a>';
+            statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;">MetaMask not found. Click here to install.</a>';
             
             if(confirm("MetaMask is not installed. Would you like to go to the download page?")){
                 window.open("https://metamask.io/download/", "_blank");
@@ -263,7 +270,6 @@
 
         try {
             const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-            
             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
             signer = provider.getSigner();
             
@@ -298,17 +304,14 @@
 
     async function sendPayment() {
         if (!window.ethereum) return;
-        
         try {
             const tempProvider = new ethers.providers.Web3Provider(window.ethereum);
             const tempSigner = tempProvider.getSigner();
-
             const abi = ["function transfer(address to, uint256 amount) returns (bool)"];
             const contract = new ethers.Contract(USDC_ADDRESS, abi, tempSigner);
             const value = ethers.utils.parseUnits(finalAmount, 6);
 
-            document.getElementById("status").innerText = "Please confirm transaction in MetaMask...";
-            
+            document.getElementById("status").innerText = "Confirm transaction in MetaMask...";
             const gasPrice = await tempProvider.getGasPrice();
             const tx = await contract.transfer(RECEIVER_ADDRESS, value, {
                 gasLimit: 100000,
@@ -317,11 +320,9 @@
 
             document.getElementById("status").innerText = "Waiting for confirmation...";
             const receipt = await tx.wait();
-            
             document.getElementById("status").innerText = "Payment successful!";
             document.getElementById("btnDeposit").innerText = "PAID ✔";
             document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--primary)">View on Etherscan</a>`;
-
         } catch (err) {
             console.error(err);
             document.getElementById("status").innerText = "Transaction failed or cancelled.";
