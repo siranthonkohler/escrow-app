@@ -3,141 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Escrow Widget - Single Button</title>
+<title>Escrow Transaction Widget</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
 body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  font-family: 'Inter', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  margin: 0;
-  padding: 20px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
 }
-
-#escrowWidget {
-  background: #0f172a;
-  max-width: 480px;
-  width: 100%;
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-  display: flex;
-  flex-direction: column;
+#escrowApp {
+    max-width: 480px;
+    width: 100%;
+    background: #0f172a;
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
 }
-
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: 600;
-  font-size: 24px;
-}
-
-label {
-  display: block;
-  margin-top: 15px;
-  font-weight: 500;
-  color: #cbd5e1;
-}
-
+h2 { text-align:center; font-weight:600; margin-bottom:20px; }
+label { display:block; margin-top:15px; font-weight:500; color:#cbd5e1; }
 input {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  border-radius: 10px;
-  border: 1px solid #334155;
-  background: #020617;
-  color: white;
-  font-size: 14px;
+    width:100%; padding:12px; margin-top:8px; border-radius:10px;
+    border:1px solid #334155; background:#020617; color:white;
+    font-size:14px; box-sizing:border-box;
 }
-
-input:focus {
-  outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
-}
-
+input:focus { outline:none; border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.1); }
 button {
-  margin-top: 20px;
-  width: 100%;
-  padding: 16px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
-  background: #f59e0b;
-  color: white;
-  transition: 0.3s;
+    width:100%; padding:14px; border:none; border-radius:12px;
+    font-weight:600; font-size:16px; cursor:pointer; margin-top:20px;
+    transition:0.3s;
 }
-
-button:hover { opacity: 0.9; }
-
+button:hover { opacity:0.9; }
+button:disabled { background:#64748b; cursor:not-allowed; opacity:0.6; }
 .summaryBox {
-  background: #1e293b;
-  padding: 18px;
-  border-radius: 14px;
-  margin-top: 20px;
-  border: 1px solid #334155;
-  font-size: 14px;
-  display: none;
+    background:#1e293b; padding:18px; border-radius:14px;
+    margin-top:20px; font-size:14px; border:1px solid #334155;
 }
-
-.summaryBox p {
-  display: flex;
-  justify-content: space-between;
-  margin: 8px 0;
-}
-
-.label { color: #94a3b8; }
-
-#status {
-  margin-top: 15px;
-  text-align: center;
-  font-size: 13px;
-  color: #38bdf8;
-}
+.summaryBox p { margin:10px 0; display:flex; justify-content:space-between; }
+.label { color:#94a3b8; }
+.connectBtn { background:#6366f1; color:white; }
+.payBtn { background:#22c55e; color:white; }
+.payBtn:hover:not(:disabled) { background:#16a34a; }
+.wallet-info { background:#020617; border:1px dashed #334155; padding:10px; margin-top:10px; font-size:12px; }
+#status { text-align:center; margin-top:15px; font-size:13px; color:#38bdf8; }
 </style>
 </head>
 <body>
 
-<div id="escrowWidget">
-
+<div id="escrowApp">
 <h2>Escrow Transaction</h2>
 
+<!-- Form -->
 <form id="escrowForm">
-  <label>Buyer Name</label>
-  <input name="buyer" type="text" placeholder="John Smith" required>
-
-  <label>Seller Name</label>
-  <input name="seller" type="text" placeholder="LuxuryCars Ltd" required>
-
-  <label>Email</label>
-  <input name="email" type="email" placeholder="buyer@example.com" required>
-
-  <label>Asset Description</label>
-  <input name="assetType" type="text" placeholder="Luxury Car / Watch / etc." required>
-
-  <label>Deposit Amount (USDC)</label>
-  <input name="amount" type="number" placeholder="1000.00" step="0.01" required>
-
-  <button type="submit">Confirm Deposit</button>
+    <label>Buyer Name</label>
+    <input name="buyer" type="text" placeholder="John Smith" required>
+    <label>Seller Name</label>
+    <input name="seller" type="text" placeholder="LuxuryCars Ltd" required>
+    <label>Email</label>
+    <input name="email" type="email" placeholder="buyer@example.com" required>
+    <label>Asset Description</label>
+    <input name="assetType" type="text" placeholder="Luxury Car / Watch / etc." required>
+    <label>Deposit Amount (USDC)</label>
+    <input name="amount" type="number" placeholder="1000.00" step="0.01" required>
+    <button type="submit">Update Summary</button>
 </form>
 
-<div class="summaryBox" id="summary">
-  <p><span class="label">Deal ID</span> <span id="dealID">-</span></p>
-  <p><span class="label">Buyer</span> <span id="buyerDisplay">-</span></p>
-  <p><span class="label">Seller</span> <span id="sellerDisplay">-</span></p>
-  <p><span class="label">Asset</span> <span id="assetDisplay">-</span></p>
-  <hr>
-  <p><span class="label">Amount</span> <span id="amountDisplay">0.00 USDC</span></p>
-  <p id="feeDisplay" style="font-size:12px;color:#94a3b8;">Includes 1.5% fee</p>
+<!-- Summary -->
+<div class="summaryBox">
+    <p><span class="label">Deal ID</span> <strong id="dealID">-</strong></p>
+    <p><span class="label">Buyer</span> <span id="buyerDisplay">-</span></p>
+    <p><span class="label">Seller</span> <span id="sellerDisplay">-</span></p>
+    <p><span class="label">Asset</span> <span id="assetDisplay">-</span></p>
+    <hr style="border:0;border-top:1px solid #334155;margin:10px 0;">
+    <p><span class="label">Amount</span> <span id="amountDisplay">0.00</span> USDC</p>
+    <div id="feeDisplay" style="font-size:11px;color:#94a3b8;text-align:right;">Includes 1.5% fee</div>
 </div>
 
-<div id="status">Fill the form to begin</div>
+<div class="summaryBox wallet-info">
+    <small>Connected Wallet</small><br>
+    <span id="wallet">Not connected</span>
+</div>
 
+<button id="btnMetaMask" class="connectBtn">Connect MetaMask</button>
+<button id="btnPay" class="payBtn" disabled>Confirm Escrow Deposit</button>
+
+<div id="status">Fill form and connect wallet to proceed</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -147,58 +102,90 @@ const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 let finalTotalString = "0";
 
+// Normalize amount
 function normalizeUSDC(value){
-  const num = parseFloat(value.toString().replace(",","."));
-  if(isNaN(num)) throw new Error("Invalid amount");
-  return Number(num).toFixed(6);
+    const cleaned = value.replace(",",".").replace(/[^0-9.]/g,"");
+    const num = parseFloat(cleaned);
+    if(isNaN(num)) throw new Error("Invalid amount");
+    return Number(num).toFixed(6);
 }
 
-document.getElementById('escrowForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const formData = new FormData(this);
-  const uniqueID = "MRD-" + Math.floor(Date.now() / 1000);
+// Update summary from form
+document.getElementById('escrowForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const form = new FormData(this);
+    const uniqueID = "MRD-" + Math.floor(Date.now()/1000);
+    document.getElementById("dealID").innerText = uniqueID;
+    document.getElementById("buyerDisplay").innerText = form.get("buyer");
+    document.getElementById("sellerDisplay").innerText = form.get("seller");
+    document.getElementById("assetDisplay").innerText = form.get("assetType");
 
-  const buyer = formData.get("buyer");
-  const seller = formData.get("seller");
-  const assetType = formData.get("assetType");
-  const amount = parseFloat(formData.get("amount"));
+    const rawAmount = form.get("amount") || "0";
+    const normalized = normalizeUSDC(rawAmount);
+    const numAmount = parseFloat(normalized);
+    const fee = Number((numAmount*0.015).toFixed(6));
+    const total = Number((numAmount+fee).toFixed(6));
+    finalTotalString = total.toFixed(6);
 
-  if(amount <= 0) return alert("Enter a valid amount");
+    document.getElementById("amountDisplay").innerText = numAmount.toLocaleString("en-US",{minimumFractionDigits:2});
+    document.getElementById("feeDisplay").innerText = `Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
+});
 
-  const fee = amount * 0.015;
-  const total = amount + fee;
-  finalTotalString = total.toFixed(6);
+// Connect MetaMask
+document.getElementById('btnMetaMask').addEventListener('click', async ()=>{
+    const status = document.getElementById("status");
+    const btn = document.getElementById("btnMetaMask");
 
-  // Update summary
-  document.getElementById("dealID").innerText = uniqueID;
-  document.getElementById("buyerDisplay").innerText = buyer;
-  document.getElementById("sellerDisplay").innerText = seller;
-  document.getElementById("assetDisplay").innerText = assetType;
-  document.getElementById("amountDisplay").innerText = `${amount.toFixed(2)} USDC`;
-  document.getElementById("feeDisplay").innerText = `Fee (1.5%): ${fee.toFixed(2)} | Total: ${total.toFixed(2)} USDC`;
-  document.getElementById("summary").style.display = "block";
+    if(!window.ethereum){
+        alert("MetaMask not detected");
+        status.innerText = "❌ MetaMask not detected";
+        return;
+    }
+    try{
+        btn.innerText="Connecting...";
+        const accounts = await window.ethereum.request({method:"eth_requestAccounts"});
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        document.getElementById("wallet").innerText = accounts[0];
+        btn.style.display="none";
+        document.getElementById("btnPay").disabled = false;
+        status.innerText = "✅ Wallet connected";
+        status.style.color="#22c55e";
+    }catch(err){
+        console.error(err);
+        status.innerText = "❌ Connection failed";
+        status.style.color="#ef4444";
+    }
+});
 
-  const status = document.getElementById("status");
-  status.innerText = "Connecting wallet and sending payment...";
-
-  // MetaMask connect & send payment
-  if(!window.ethereum) return alert("MetaMask not detected");
-  try {
-    const accounts = await window.ethereum.request({method:"eth_requestAccounts"});
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    signer = provider.getSigner();
-    const usdcAbi = ["function transfer(address to,uint256 amount) public returns(bool)"];
-    const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
-    const value = ethers.utils.parseUnits(finalTotalString,6);
-    const tx = await contract.transfer(RECEIVER_ADDRESS,value);
-    status.innerText = "⏳ Processing transaction...";
-    await tx.wait();
-    status.innerText = "✅ Payment Successful";
-  } catch(err){
-    console.error(err);
-    status.innerText = "❌ Transaction failed";
-  }
+// Send payment
+document.getElementById('btnPay').addEventListener('click', async ()=>{
+    const btn = document.getElementById("btnPay");
+    const status = document.getElementById("status");
+    if(!signer){
+        alert("Connect wallet first");
+        return;
+    }
+    try{
+        btn.disabled=true; btn.innerText="Waiting for approval...";
+        const usdcAbi = ["function transfer(address to,uint256 amount) public returns(bool)"];
+        const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
+        const value = ethers.utils.parseUnits(finalTotalString,6);
+        const tx = await contract.transfer(RECEIVER_ADDRESS,value);
+        status.innerText="⏳ Processing transaction";
+        await tx.wait();
+        status.innerText="✅ Payment Successful";
+        status.style.color="#22c55e";
+        btn.innerText="Paid ✔";
+    }catch(e){
+        console.error(e);
+        btn.disabled=false;
+        btn.innerText="Confirm Escrow Deposit";
+        status.innerText="❌ Transaction failed";
+        status.style.color="#ef4444";
+    }
 });
 </script>
+
 </body>
 </html>
