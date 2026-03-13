@@ -1,100 +1,218 @@
-let provider, signer;
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
-const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-const REQUIRED_CHAIN = "0x1"; // Ethereum Mainnet
+<title>Escrow Deposit</title>
 
-let finalTotalString = "0";
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
+<style>
 
-function normalizeUSDC(value){
-
-const cleaned = value
-.replace(",",".")
-.replace(/[^0-9.]/g,"");
-
-const num = parseFloat(cleaned);
-
-if(isNaN(num)) throw new Error("Invalid amount");
-
-return Number(num).toFixed(6);
-
+body{
+background:#020617;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+margin:0;
+font-family:'Inter',sans-serif;
 }
+
+#escrowDepositApp{
+max-width:440px;
+width:90%;
+background:#0f172a;
+color:white;
+padding:30px;
+border-radius:20px;
+box-shadow:0 20px 50px rgba(0,0,0,0.6);
+border:1px solid #1e293b;
+}
+
+h2{
+text-align:center;
+margin-bottom:25px;
+}
+
+.summaryBox{
+background:#1e293b;
+padding:18px;
+border-radius:14px;
+margin-bottom:15px;
+font-size:14px;
+border:1px solid #334155;
+}
+
+.summaryBox p{
+margin:10px 0;
+display:flex;
+justify-content:space-between;
+}
+
+.label{
+color:#94a3b8;
+}
+
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:14px;
+font-weight:600;
+font-size:16px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.connectBtn{
+background:#6366f1;
+color:white;
+}
+
+.payBtn{
+background:#22c55e;
+color:white;
+}
+
+.payBtn:disabled{
+background:#1e293b;
+color:#475569;
+border:1px solid #334155;
+cursor:not-allowed;
+}
+
+#status{
+margin-top:20px;
+font-size:13px;
+text-align:center;
+color:#38bdf8;
+}
+
+.wallet-info{
+background:#020617;
+border:1px dashed #334155;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="escrowDepositApp">
+
+<h2>Escrow Deposit (USDC)</h2>
+
+<div class="summaryBox">
+
+<p><span class="label">Deal ID</span><strong id="dealID">Loading...</strong></p>
+<p><span class="label">Buyer</span><span id="buyer">-</span></p>
+<p><span class="label">Seller</span><span id="seller">-</span></p>
+<p><span class="label">Asset</span><span id="assetType">-</span></p>
+
+<hr style="border:0;border-top:1px solid #334155;margin:15px 0;">
+
+<p>
+<span class="label">Amount</span>
+<span style="font-size:18px;color:#22c55e;font-weight:bold;">
+<span id="amountDisplay">0.00</span> USDC
+</span>
+</p>
+
+<div id="feeDisplay" style="font-size:11px;color:#94a3b8;text-align:right;">
+Includes 1.5% fee
+</div>
+
+</div>
+
+<div class="summaryBox wallet-info">
+<small style="color:#94a3b8">Connected Wallet</small><br>
+<span id="wallet" style="font-family:monospace;font-size:11px;">Not connected</span>
+</div>
+
+<button id="btnMetaMask" class="connectBtn" onclick="connectMetaMask()">
+Connect MetaMask
+</button>
+
+<button id="btnPay" class="payBtn" onclick="sendPayment()" disabled>
+Confirm Escrow Deposit
+</button>
+
+<div id="status">
+Please connect your wallet
+</div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+<script>
+
+let provider;
+let signer;
+
+const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
+
+const REQUIRED_CHAIN="0x1";
+
+let finalTotalString="0";
 
 
 function loadDealData(){
 
-const params = new URLSearchParams(window.location.search);
+const params=new URLSearchParams(window.location.search);
 
-const rawAmount = params.get("amount");
+const amount=params.get("amount")||"0";
 
-if(!rawAmount){
+const numAmount=parseFloat(amount);
 
-document.getElementById("status").innerText="❌ Missing amount";
+if(isNaN(numAmount)||numAmount<=0){
+
+document.getElementById("status").innerText="Invalid amount";
 return;
 
 }
 
-const normalized = normalizeUSDC(rawAmount);
+const fee=numAmount*0.015;
+const total=numAmount+fee;
 
-const numAmount = parseFloat(normalized);
+finalTotalString=total.toFixed(6);
 
-if(numAmount <= 0){
+document.getElementById("dealID").innerText=params.get("dealID")||"N/A";
+document.getElementById("buyer").innerText=params.get("buyer")||"N/A";
+document.getElementById("seller").innerText=params.get("seller")||"N/A";
+document.getElementById("assetType").innerText=params.get("assetType")||"N/A";
 
-document.getElementById("status").innerText="❌ Invalid amount";
-document.getElementById("btnPay").disabled=true;
-return;
+document.getElementById("amountDisplay").innerText=numAmount.toFixed(2);
 
-}
-
-const fee = Number((numAmount * 0.015).toFixed(6));
-const total = Number((numAmount + fee).toFixed(6));
-
-finalTotalString = total.toFixed(6);
-
-document.getElementById("dealID").innerText =
-params.get("dealID") || "N/A";
-
-document.getElementById("buyer").innerText =
-params.get("buyer") || "N/A";
-
-document.getElementById("seller").innerText =
-params.get("seller") || "N/A";
-
-document.getElementById("assetType").innerText =
-params.get("assetType") || "N/A";
-
-document.getElementById("amountDisplay").innerText =
-numAmount.toLocaleString("en-US",{minimumFractionDigits:2});
-
-document.getElementById("feeDisplay").innerText =
+document.getElementById("feeDisplay").innerText=
 `Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
 
 }
 
-window.addEventListener("load", loadDealData);
+window.onload=loadDealData;
 
 
 
-async function switchToEthereum(){
+async function switchNetwork(){
 
 try{
 
 await window.ethereum.request({
-
-method: "wallet_switchEthereumChain",
-
-params: [{ chainId: REQUIRED_CHAIN }]
-
+method:"wallet_switchEthereumChain",
+params:[{chainId:REQUIRED_CHAIN}]
 });
 
 return true;
 
-}catch(switchError){
+}catch(e){
 
-console.error("Network switch failed",switchError);
-
+console.error(e);
 return false;
 
 }
@@ -105,75 +223,58 @@ return false;
 
 async function connectMetaMask(){
 
-const status = document.getElementById("status");
-const btn = document.getElementById("btnMetaMask");
+const status=document.getElementById("status");
 
 if(!window.ethereum){
 
-alert("MetaMask not detected");
-
-status.innerText="❌ MetaMask not detected";
-
+alert("MetaMask not installed");
 return;
 
 }
 
 try{
 
-btn.innerText="Connecting...";
+provider=new ethers.providers.Web3Provider(window.ethereum);
 
-provider = new ethers.providers.Web3Provider(window.ethereum);
+await provider.send("eth_requestAccounts",[]);
 
-await provider.send("eth_requestAccounts", []);
+signer=provider.getSigner();
 
-signer = provider.getSigner();
+const address=await signer.getAddress();
 
-const address = await signer.getAddress();
+document.getElementById("wallet").innerText=address;
 
-document.getElementById("wallet").innerText = address;
+const network=await provider.getNetwork();
 
+if(network.chainId!==1){
 
+status.innerText="Switching to Ethereum Mainnet...";
 
-/* NETWORK CHECK */
-
-const network = await provider.getNetwork();
-
-if(network.chainId !== 1){
-
-status.innerText="⚠️ Switching to Ethereum Mainnet...";
-
-const switched = await switchToEthereum();
+const switched=await switchNetwork();
 
 if(!switched){
 
-status.innerText="❌ Please switch to Ethereum Mainnet";
-status.style.color="#ef4444";
+status.innerText="Please switch to Ethereum Mainnet";
 return;
 
 }
 
-provider = new ethers.providers.Web3Provider(window.ethereum);
-signer = provider.getSigner();
+provider=new ethers.providers.Web3Provider(window.ethereum);
+signer=provider.getSigner();
 
 }
 
-
-
-btn.style.display="none";
-
+document.getElementById("btnMetaMask").style.display="none";
 document.getElementById("btnPay").disabled=false;
 
-status.innerText="✅ Wallet connected";
+status.innerText="Wallet connected";
 status.style.color="#22c55e";
 
 }catch(err){
 
 console.error(err);
 
-status.innerText="❌ Connection failed";
-status.style.color="#ef4444";
-
-btn.innerText="Connect MetaMask";
+status.innerText="Connection failed";
 
 }
 
@@ -189,7 +290,6 @@ const status=document.getElementById("status");
 if(!signer){
 
 alert("Connect wallet first");
-
 return;
 
 }
@@ -197,41 +297,47 @@ return;
 try{
 
 btn.disabled=true;
-btn.innerText="Waiting for approval...";
+btn.innerText="Waiting approval...";
 
-const usdcAbi = [
+const abi=[
 "function transfer(address to,uint256 amount) public returns(bool)"
 ];
 
-const contract = new ethers.Contract(
+const contract=new ethers.Contract(
 USDC_ADDRESS,
-usdcAbi,
+abi,
 signer
 );
 
-const value = ethers.utils.parseUnits(finalTotalString,6);
+const value=ethers.utils.parseUnits(finalTotalString,6);
 
-const tx = await contract.transfer(RECEIVER_ADDRESS,value);
+const tx=await contract.transfer(RECEIVER_ADDRESS,value);
 
-status.innerText="⏳ Waiting for confirmation...";
+status.innerText="Waiting blockchain confirmation...";
 
 await tx.wait();
 
-status.innerText="✅ Payment Successful";
+status.innerText="Payment successful";
 status.style.color="#22c55e";
 
 btn.innerText="Paid ✔";
 
-}catch(e){
+}catch(err){
 
-console.error(e);
+console.error(err);
 
 btn.disabled=false;
 btn.innerText="Confirm Escrow Deposit";
 
-status.innerText="❌ Transaction failed";
+status.innerText="Transaction failed";
 status.style.color="#ef4444";
 
 }
 
 }
+
+</script>
+
+</body>
+</html>
+```
