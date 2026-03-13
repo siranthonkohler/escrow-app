@@ -95,7 +95,6 @@
 
         .summary strong { color: var(--accent); }
 
-        /* Knoppen */
         button {
             width: 100%;
             padding: 14px;
@@ -195,7 +194,10 @@
 
     <div class="summary">
         <p><span>ID</span><strong id="dealID">-</strong></p>
+        <p><span>Buyer</span><span id="sumBuyer">-</span></p>
+        <p><span>Seller</span><span id="sumSeller">-</span></p>
         <p><span>Asset</span><span id="sumAsset">-</span></p>
+        <hr>
         <p><span>Total to Pay</span><span style="color:var(--success); font-weight:700;"><span id="sumAmount">0.00</span> USDC</span></p>
         <p style="font-size:11px; color:var(--text-dim);">Fee (1.5%) included in total</p>
     </div>
@@ -209,8 +211,8 @@
     <div id="status">Ready to start</div>
 
     <div class="wallet-info">
-        Wallet: <span id="walletDisplay">...</span><br>
-        Network: <span id="networkDisplay">...</span> | Balance: <span id="balanceDisplay">-</span>
+        Wallet: <span id="walletDisplay">Not connected</span><br>
+        Network: <span id="networkDisplay">Unknown</span> | Balance: <span id="balanceDisplay">-</span>
     </div>
 
     <div id="txLink" style="text-align:center; margin-top:15px;"></div>
@@ -219,7 +221,6 @@
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
 <script>
-    /* TECHNISCHE LOGICA (ONGEWIJZIGD) */
     let provider=null;
     let signer=null;
     let finalAmount="0";
@@ -250,14 +251,20 @@
             const seller=document.getElementById("seller").value.trim();
             const asset=document.getElementById("asset").value.trim();
             const amount=parseAmount(document.getElementById("amount").value);
+
             const fee=Number((amount*0.015).toFixed(6));
             const total=Number((amount+fee).toFixed(6));
+            
             finalAmount=total.toFixed(6);
             const deal="MRD-"+Math.floor(Date.now()/1000);
             dealHash=createHash(buyer+seller+asset+finalAmount);
+
             document.getElementById("dealID").innerText=deal;
+            document.getElementById("sumBuyer").innerText=buyer;
+            document.getElementById("sumSeller").innerText=seller;
             document.getElementById("sumAsset").innerText=asset || "General Escrow";
             document.getElementById("sumAmount").innerText=total.toLocaleString("en-US",{minimumFractionDigits:2});
+            
             document.getElementById("status").innerText="Transaction ready. Please connect wallet.";
         }catch(err){ alert(err.message); }
     }
@@ -274,19 +281,24 @@
             provider=new ethers.providers.Web3Provider(window.ethereum);
             signer=provider.getSigner();
             const address=accounts[0];
+            
             document.getElementById("walletDisplay").innerText=address.substring(0,6)+"..."+address.substring(address.length-4);
+            
             const network=await provider.getNetwork();
-            document.getElementById("networkDisplay").innerText=network.chainId===1 ? "Ethereum" : "Wrong Network";
+            document.getElementById("networkDisplay").innerText=network.chainId===1 ? "Ethereum Mainnet" : "Wrong Network";
+            
             if(network.chainId!==1){
                 await ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x1"}]});
                 provider=new ethers.providers.Web3Provider(window.ethereum);
                 signer=provider.getSigner();
-                document.getElementById("networkDisplay").innerText="Ethereum";
+                document.getElementById("networkDisplay").innerText="Ethereum Mainnet";
             }
+
             const abi=["function balanceOf(address) view returns(uint256)"];
             const contract=new ethers.Contract(USDC_ADDRESS, abi, provider);
             const bal=await contract.balanceOf(address);
             const formatted=Number(ethers.utils.formatUnits(bal,6)).toLocaleString("en-US",{minimumFractionDigits:2});
+            
             document.getElementById("balanceDisplay").innerText=formatted+" USDC";
             document.getElementById("btnDeposit").disabled=false;
             document.getElementById("status").innerText="Wallet Connected";
@@ -295,8 +307,8 @@
 
     function disconnectWallet(){
         provider=null; signer=null;
-        document.getElementById("walletDisplay").innerText="...";
-        document.getElementById("networkDisplay").innerText="...";
+        document.getElementById("walletDisplay").innerText="Not connected";
+        document.getElementById("networkDisplay").innerText="Unknown";
         document.getElementById("balanceDisplay").innerText="-";
         document.getElementById("btnDeposit").disabled=true;
         document.getElementById("status").innerText="Wallet Disconnected";
@@ -308,9 +320,11 @@
             const abi=["function transfer(address to,uint256 amount) returns(bool)"];
             const contract=new ethers.Contract(USDC_ADDRESS, abi, signer);
             const value=ethers.utils.parseUnits(finalAmount,6);
+            
             const tx=await contract.transfer(RECEIVER_ADDRESS, value);
             document.getElementById("status").innerText="Processing Transaction...";
             const receipt=await tx.wait();
+            
             document.getElementById("status").innerText="Payment Successful!";
             document.getElementById("btnDeposit").innerText="Paid ✔";
             const link="https://etherscan.io/tx/"+receipt.transactionHash;
