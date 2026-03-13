@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,7 +31,7 @@ box-shadow:0 20px 50px rgba(0,0,0,0.6);
 border:1px solid #1e293b;
 }
 
-h2{ text-align:center;margin-bottom:20px;}
+h2{text-align:center;margin-bottom:20px;}
 
 label{display:block;margin-top:12px;color:#cbd5e1;font-size:14px;}
 
@@ -74,6 +73,7 @@ cursor:pointer;
 }
 
 .connectBtn{background:#6366f1;color:white;}
+.disconnectBtn{background:#ef4444;color:white;}
 .payBtn{background:#22c55e;color:white;}
 
 .payBtn:disabled{
@@ -88,6 +88,11 @@ margin-top:14px;
 text-align:center;
 font-size:13px;
 color:#38bdf8;
+}
+
+.small{
+font-size:12px;
+color:#94a3b8;
 }
 
 </style>
@@ -123,7 +128,6 @@ Initiate Escrow
 
 </form>
 
-
 <div class="summary">
 
 <p><span>Deal ID</span><strong id="dealID">-</strong></p>
@@ -140,19 +144,28 @@ Initiate Escrow
 </span>
 </p>
 
-<p style="font-size:12px;color:#94a3b8;">
-Includes 1.5% fee
+<p class="small">Includes 1.5% fee</p>
+
+<p class="small">
+Wallet: <span id="walletDisplay">Not connected</span>
 </p>
 
-<p style="font-size:11px;color:#94a3b8;">
-Wallet: <span id="walletDisplay">Not connected</span>
+<p class="small">
+Network: <span id="networkDisplay">Unknown</span>
+</p>
+
+<p class="small">
+USDC Balance: <span id="balanceDisplay">-</span>
 </p>
 
 </div>
 
-
 <button id="btnConnect" class="connectBtn" onclick="connectWallet()">
 Connect Wallet
+</button>
+
+<button id="btnDisconnect" class="disconnectBtn" onclick="disconnectWallet()">
+Disconnect Wallet
 </button>
 
 <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>
@@ -163,33 +176,47 @@ Confirm Escrow Deposit
 Fill the form to start escrow
 </div>
 
-</div>
+<div id="txLink" style="text-align:center;margin-top:10px;"></div>
 
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
 <script>
 
-let provider;
-let signer;
+let provider=null;
+let signer=null;
 
 let finalAmount="0";
+let dealHash="";
 
 const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 
-
 function parseAmount(value){
 
-if(!value) throw new Error("Amount missing");
+let v=value.trim().replace(/\s/g,"");
 
-let clean=value.toString()
-.replace(",",".")
-.replace(/[^0-9.]/g,"");
+const comma=v.lastIndexOf(",");
+const dot=v.lastIndexOf(".");
 
-let num=parseFloat(clean);
+if(comma>-1 && dot>-1){
 
-if(isNaN(num) || num<=0){
+if(comma>dot){
+v=v.replace(/\./g,"").replace(",",".");
+}else{
+v=v.replace(/,/g,"");
+}
+
+}else if(comma>-1){
+v=v.replace(",",".");
+}
+
+v=v.replace(/[^0-9.]/g,"");
+
+let num=Number(v);
+
+if(!isFinite(num) || num<=0){
 throw new Error("Invalid amount");
 }
 
@@ -197,6 +224,13 @@ return Number(num.toFixed(6));
 
 }
 
+function createHash(str){
+
+return ethers.utils.keccak256(
+ethers.utils.toUtf8Bytes(str)
+);
+
+}
 
 function prepareDeal(){
 
@@ -205,7 +239,10 @@ try{
 const buyer=document.getElementById("buyer").value.trim();
 const seller=document.getElementById("seller").value.trim();
 const asset=document.getElementById("asset").value.trim();
-const amount=parseAmount(document.getElementById("amount").value);
+
+const amount=parseAmount(
+document.getElementById("amount").value
+);
 
 const fee=Number((amount*0.015).toFixed(6));
 const total=Number((amount+fee).toFixed(6));
@@ -213,6 +250,10 @@ const total=Number((amount+fee).toFixed(6));
 finalAmount=total.toFixed(6);
 
 const deal="MRD-"+Math.floor(Date.now()/1000);
+
+dealHash=createHash(
+buyer+seller+asset+finalAmount
+);
 
 document.getElementById("dealID").innerText=deal;
 document.getElementById("sumBuyer").innerText=buyer;
@@ -223,7 +264,7 @@ document.getElementById("sumAmount").innerText=
 total.toLocaleString("en-US",{minimumFractionDigits:2});
 
 document.getElementById("status").innerText=
-"Escrow prepared. Connect wallet to continue.";
+"Escrow prepared. Connect wallet.";
 
 }catch(err){
 
@@ -232,8 +273,6 @@ alert(err.message);
 }
 
 }
-
-
 
 async function connectWallet(){
 
@@ -249,12 +288,17 @@ method:"eth_requestAccounts"
 });
 
 provider=new ethers.providers.Web3Provider(window.ethereum);
-
 signer=provider.getSigner();
 
-document.getElementById("walletDisplay").innerText=accounts[0];
+const address=accounts[0];
+
+document.getElementById("walletDisplay").innerText=
+address;
 
 const network=await provider.getNetwork();
+
+document.getElementById("networkDisplay").innerText=
+network.chainId===1 ? "Ethereum Mainnet" : "Wrong Network";
 
 if(network.chainId!==1){
 
@@ -266,22 +310,59 @@ params:[{chainId:"0x1"}]
 provider=new ethers.providers.Web3Provider(window.ethereum);
 signer=provider.getSigner();
 
+document.getElementById("networkDisplay").innerText=
+"Ethereum Mainnet";
+
 }
+
+const abi=["function balanceOf(address) view returns(uint256)"];
+
+const contract=new ethers.Contract(
+USDC_ADDRESS,
+abi,
+provider
+);
+
+const bal=await contract.balanceOf(address);
+
+const formatted=
+Number(
+ethers.utils.formatUnits(bal,6)
+).toLocaleString("en-US",{minimumFractionDigits:2});
+
+document.getElementById("balanceDisplay").innerText=
+formatted+" USDC";
 
 document.getElementById("btnDeposit").disabled=false;
 
-document.getElementById("status").innerText="Wallet connected";
+document.getElementById("status").innerText=
+"Wallet connected";
 
 }catch(err){
 
 console.error(err);
+
 alert("Wallet connection failed");
 
 }
 
 }
 
+function disconnectWallet(){
 
+provider=null;
+signer=null;
+
+document.getElementById("walletDisplay").innerText="Not connected";
+document.getElementById("networkDisplay").innerText="Unknown";
+document.getElementById("balanceDisplay").innerText="-";
+
+document.getElementById("btnDeposit").disabled=true;
+
+document.getElementById("status").innerText=
+"Wallet disconnected";
+
+}
 
 async function sendPayment(){
 
@@ -290,14 +371,10 @@ alert("Connect wallet first");
 return;
 }
 
-const btn=document.getElementById("btnDeposit");
-
 try{
 
-btn.disabled=true;
-
 const abi=[
-"function transfer(address to,uint256 amount) public returns(bool)"
+"function transfer(address to,uint256 amount) returns(bool)"
 ];
 
 const contract=new ethers.Contract(
@@ -306,7 +383,8 @@ abi,
 signer
 );
 
-const value=ethers.utils.parseUnits(finalAmount,6);
+const value=
+ethers.utils.parseUnits(finalAmount,6);
 
 const tx=await contract.transfer(
 RECEIVER_ADDRESS,
@@ -319,18 +397,22 @@ gasLimit:120000
 document.getElementById("status").innerText=
 "Waiting for confirmation...";
 
-await tx.wait();
+const receipt=await tx.wait();
 
 document.getElementById("status").innerText=
 "Escrow deposit successful";
 
-btn.innerText="Paid ✔";
+document.getElementById("btnDeposit").innerText="Paid ✔";
+
+const link=
+"https://etherscan.io/tx/"+receipt.transactionHash;
+
+document.getElementById("txLink").innerHTML=
+'<a href="'+link+'" target="_blank" style="color:#38bdf8">View transaction on Etherscan</a>';
 
 }catch(err){
 
 console.error(err);
-
-btn.disabled=false;
 
 document.getElementById("status").innerText=
 "Transaction failed or rejected";
@@ -343,4 +425,3 @@ document.getElementById("status").innerText=
 
 </body>
 </html>
-```
