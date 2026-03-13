@@ -145,8 +145,8 @@
             
             console.log("🚀 URL die ik probeer op te openen:", githubUrl);
             
-            // Zelfde domein = MetaMask context blijft intact!
-            window.location.href = githubUrl;
+            // Nieuw tabblad openen zodat MetaMask kan triggeren
+            window.open(githubUrl, "_blank");
         });
     </script>
 </body>
