@@ -276,10 +276,12 @@ alert(err.message);
 
 async function connectWallet(){
 
-if(!window.ethereum){
+if(typeof window.ethereum === "undefined" || !window.ethereum.isMetaMask){
+
 if(confirm("MetaMask is not installed.\n\nClick OK to install MetaMask.")){
-window.location.href="https://metamask.io/download/";
+window.open("https://metamask.io/download/", "_blank");
 }
+
 return;
 }
 
