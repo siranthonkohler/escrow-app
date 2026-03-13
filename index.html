@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escrow Deposit (USDC)</title>
+    <title>Escrow Deposit Application</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: transparent;
+            background-color: #020617; /* Donkere achtergrond voor als de iframe laadt */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -15,10 +15,9 @@
             margin: 0;
             font-family: 'Inter', sans-serif;
         }
-
         #escrowDepositApp {
             max-width: 440px;
-            width: 100%;
+            width: 90%;
             background: #0f172a;
             color: white;
             padding: 30px;
@@ -26,14 +25,7 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
             border: 1px solid #1e293b;
         }
-
-        #escrowDepositApp h2 {
-            margin-top: 0;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
+        h2 { text-align: center; margin-bottom: 25px; font-weight: 600; }
         .summaryBox {
             background: #1e293b;
             padding: 18px;
@@ -42,17 +34,9 @@
             font-size: 14px;
             border: 1px solid #334155;
         }
-
-        .summaryBox p {
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-between;
-        }
-
+        .summaryBox p { margin: 10px 0; display: flex; justify-content: space-between; }
         .label { color: #94a3b8; }
-
         button {
-            margin-top: 10px;
             width: 100%;
             padding: 16px;
             border: none;
@@ -60,35 +44,14 @@
             font-weight: 600;
             font-size: 16px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: 0.2s;
+            margin-top: 10px;
         }
-
         .connectBtn { background: #6366f1; color: white; }
-        .connectBtn:hover { background: #4f46e5; }
-        .connectBtn:disabled { background: #334155; cursor: not-allowed; }
-
         .payBtn { background: #22c55e; color: white; }
-        .payBtn:hover:not(:disabled) { background: #16a34a; }
-        .payBtn:disabled {
-            background: #1e293b;
-            color: #475569;
-            cursor: not-allowed;
-            border: 1px solid #334155;
-        }
-
-        #status {
-            margin-top: 20px;
-            font-size: 13px;
-            color: #38bdf8;
-            font-weight: 500;
-            text-align: center;
-            min-height: 18px;
-        }
-
-        .wallet-info {
-            background: #020617;
-            border: 1px dashed #334155;
-        }
+        .payBtn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; border: 1px solid #334155; }
+        #status { margin-top: 20px; font-size: 13px; text-align: center; color: #38bdf8; }
+        .wallet-info { background: #020617; border: 1px dashed #334155; }
     </style>
 </head>
 <body>
@@ -97,27 +60,27 @@
     <h2>Escrow Deposit (USDC)</h2>
 
     <div class="summaryBox">
-        <p><span class="label">Deal ID</span> <strong id="dealID">...</strong></p>
-        <p><span class="label">Buyer</span> <span id="buyer">-</span></p>
-        <p><span class="label">Seller</span> <span id="seller">-</span></p>
-        <p><span class="label">Asset</span> <span id="assetType">-</span></p>
+        <p><span class="label">Deal ID</span> <strong id="dealID">Laden...</strong></p>
+        <p><span class="label">Koper</span> <span id="buyer">-</span></p>
+        <p><span class="label">Verkoper</span> <span id="seller">-</span></p>
+        <p><span class="label">Type Asset</span> <span id="assetType">-</span></p>
         <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
-        <p><span class="label">Amount</span> <span style="font-size:18px; color:#22c55e; font-weight:bold;"><span id="amountDisplay">0.00</span> USDC</span></p>
-        <div id="feeDisplay" style="font-size:12px; color:#94a3b8; text-align: right;">Fee (1.5%): 0.00 USDC</div>
+        <p><span class="label">Bedrag</span> <span style="font-size:18px; color:#22c55e; font-weight:bold;"><span id="amountDisplay">0.00</span> USDC</span></p>
+        <div id="feeDisplay" style="font-size:11px; color:#94a3b8; text-align: right;">Inclusief 1.5% fee</div>
     </div>
 
     <div class="summaryBox wallet-info">
-        <small style="color:#94a3b8">Connected Wallet</small><br>
+        <small style="color:#94a3b8">Verbonden Wallet</small><br>
         <span id="wallet" style="font-family:monospace; font-size: 12px;">Niet verbonden</span>
     </div>
 
     <div id="actionArea">
-        <button class="connectBtn" id="btnMetaMask" onclick="connectMetaMask()">Verbind MetaMask</button>
+        <button id="btnMetaMask" class="connectBtn" onclick="connectMetaMask()">Verbind MetaMask</button>
     </div>
 
-    <button class="payBtn" id="btnPay" onclick="sendPayment()" disabled>Verzend naar Escrow</button>
+    <button id="btnPay" class="payBtn" onclick="sendPayment()" disabled>Bevestig Escrow Deposit</button>
 
-    <div id="status">Verbind a.u.b. je wallet</div>
+    <div id="status">Verbind je wallet om door te gaan</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
@@ -125,23 +88,14 @@
     let provider, signer;
     const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
     const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
-    const TARGET_CHAIN_ID = "0x1"; // Ethereum Mainnet
+    const TARGET_CHAIN_ID = "0x1"; 
     let finalTotalString = "0";
 
-    function getURLParams() {
-        let params = new URLSearchParams(window.location.search);
-        try {
-            if (!params.has('amount') && window.parent !== window) {
-                params = new URLSearchParams(window.parent.location.search);
-            }
-        } catch (e) { console.warn("Iframe params blocked by browser."); }
-        return params;
-    }
-
     function loadDealData(){
-        const params = getURLParams();
+        const params = new URLSearchParams(window.location.search);
         const rawAmount = (params.get("amount") || "0").replace(',', '.').replace(/[^0-9.]/g, '');
         const numAmount = parseFloat(rawAmount) || 0;
+        
         const fee = numAmount * 0.015;
         const total = numAmount + fee;
         finalTotalString = total.toFixed(6);
@@ -150,55 +104,41 @@
         document.getElementById("buyer").innerText = params.get("buyer") || "N/A";
         document.getElementById("seller").innerText = params.get("seller") || "N/A";
         document.getElementById("assetType").innerText = params.get("assetType") || "N/A";
-        document.getElementById("amountDisplay").innerText = numAmount.toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2});
-        document.getElementById("feeDisplay").innerText = `Fee (1.5%): ${fee.toFixed(2)} USDC`;
+        document.getElementById("amountDisplay").innerText = numAmount.toLocaleString('en-US',{minimumFractionDigits:2});
+        document.getElementById("feeDisplay").innerText = `Fee (1.5%): ${fee.toFixed(2)} USDC | Totaal: ${total.toFixed(2)} USDC`;
     }
 
-    window.addEventListener('load', loadDealData);
+    window.addEventListener('DOMContentLoaded', loadDealData);
 
     async function connectMetaMask(){
         const status = document.getElementById("status");
         const btn = document.getElementById("btnMetaMask");
         
-        let eth = window.ethereum || (window.parent && window.parent.ethereum ? window.parent.ethereum : null);
-
-        if(!eth){
-            status.innerText = "MetaMask niet gevonden.";
+        if(!window.ethereum){
+            alert("MetaMask niet gevonden. Gebruik de MetaMask browser of extensie.");
             return;
         }
 
         try {
-            btn.disabled = true;
-            status.innerText = "Bezig met verbinden...";
+            btn.innerText = "Bezig...";
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: TARGET_CHAIN_ID }],
+            });
 
-            // Forceer switch naar Ethereum Mainnet
-            try {
-                await eth.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: TARGET_CHAIN_ID }],
-                });
-            } catch (switchError) {
-                console.log("Netwerk switch overgeslagen of mislukt.");
-            }
-
-            const accounts = await eth.request({ method: 'eth_requestAccounts' });
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
             
-            if (accounts.length > 0) {
-                provider = new ethers.providers.Web3Provider(eth);
-                signer = provider.getSigner();
-                
-                document.getElementById("wallet").innerText = accounts[0].slice(0,12)+"..."+accounts[0].slice(-10);
-                btn.style.display = "none";
-                document.getElementById("btnPay").disabled = false;
-                
-                status.innerText = "Wallet verbonden!";
-                status.style.color = "#22c55e";
-            }
+            document.getElementById("wallet").innerText = accounts[0];
+            btn.style.display = "none";
+            document.getElementById("btnPay").disabled = false;
+            status.innerText = "Wallet succesvol verbonden!";
+            status.style.color = "#22c55e";
         } catch(err) {
             console.error(err);
-            btn.disabled = false;
-            status.innerText = "Verbinding mislukt.";
-            status.style.color = "#ef4444";
+            btn.innerText = "Verbind MetaMask";
+            status.innerText = "Verbinding geweigerd.";
         }
     }
 
@@ -206,32 +146,23 @@
         const btn = document.getElementById("btnPay");
         const status = document.getElementById("status");
         
-        if(!signer || finalTotalString === "0") return;
-
         try {
             btn.disabled = true;
-            btn.innerText = "Bevestigen...";
-            
+            btn.innerText = "Wachten op goedkeuring...";
             const usdcAbi = ["function transfer(address to, uint256 amount) public returns (bool)"];
             const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
             const value = ethers.utils.parseUnits(finalTotalString, 6);
             
             const tx = await contract.transfer(RECEIVER_ADDRESS, value);
-            
-            status.innerText = "Transactie in behandeling...";
-            status.style.color = "#38bdf8";
-            
+            status.innerText = "Transactie verwerken...";
             await tx.wait();
             
-            status.innerText = "Betaling voltooid!";
-            status.style.color = "#22c55e";
-            btn.innerText = "Verwerkt ✔";
+            status.innerText = "Betaling geslaagd!";
+            btn.innerText = "Betaald ✔";
         } catch(e) {
-            console.error(e);
             btn.disabled = false;
-            btn.innerText = "Verzend naar Escrow";
+            btn.innerText = "Bevestig Escrow Deposit";
             status.innerText = "Transactie mislukt.";
-            status.style.color = "#ef4444";
         }
     }
 </script>
