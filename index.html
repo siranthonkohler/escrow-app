@@ -2,6 +2,7 @@
     let provider, signer;
     const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
     const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
+    const TARGET_CHAIN_ID = "0x1"; // 0x1 is Hex voor Ethereum Mainnet
     let finalTotalString = "0";
 
     function getURLParams() {
@@ -10,9 +11,7 @@
             if (!params.has('amount') && window.parent !== window) {
                 params = new URLSearchParams(window.parent.location.search);
             }
-        } catch (e) {
-            console.warn("Iframe restrictie: kan parent URL niet lezen. Gebruik directe URL params.");
-        }
+        } catch (e) { console.warn("Iframe params restricted."); }
         return params;
     }
 
@@ -38,54 +37,45 @@
         const status = document.getElementById("status");
         const btn = document.getElementById("btnMetaMask");
         
-        // 1. Zoek de provider (direct of via parent)
-        let eth = window.ethereum;
-        if (!eth && window.parent && window.parent.ethereum) {
-            eth = window.parent.ethereum;
-        }
+        let eth = window.ethereum || (window.parent && window.parent.ethereum ? window.parent.ethereum : null);
 
         if(!eth){
-            status.innerText = "MetaMask not detected.";
-            alert("Open deze pagina in een browser met MetaMask (zoals Chrome of Brave).");
+            alert("MetaMask niet gevonden.");
             return;
         }
 
         try {
             btn.disabled = true;
-            status.innerText = "Check MetaMask popup...";
-            status.style.color = "#38bdf8";
+            status.innerText = "Verbinding maken...";
+
+            // 1. Forceer netwerk wissel naar Ethereum Mainnet
+            try {
+                await eth.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: TARGET_CHAIN_ID }],
+                });
+            } catch (switchError) {
+                // Foutcode 4902 betekent dat het netwerk nog niet in de wallet staat (onwaarschijnlijk voor Mainnet)
+                console.error("Netwerk wissel mislukt", switchError);
+            }
 
             // 2. Vraag accounts op
             const accounts = await eth.request({ method: 'eth_requestAccounts' });
             
-            if (accounts.length > 0) {
-                provider = new ethers.providers.Web3Provider(eth);
-                
-                // 3. Controleer of we op Ethereum Mainnet zitten (Chain ID 1)
-                const { chainId } = await provider.getNetwork();
-                if (chainId !== 1) {
-                    status.innerText = "Switch MetaMask to Ethereum Mainnet.";
-                    status.style.color = "#fbbf24";
-                    btn.disabled = false;
-                    return;
-                }
+            provider = new ethers.providers.Web3Provider(eth);
+            signer = provider.getSigner();
+            
+            document.getElementById("wallet").innerText = accounts[0].slice(0,12)+"..."+accounts[0].slice(-10);
+            btn.style.display = "none";
+            document.getElementById("btnPay").disabled = false;
+            
+            status.innerText = "Verbonden met Ethereum!";
+            status.style.color = "#22c55e";
 
-                signer = provider.getSigner();
-                document.getElementById("wallet").innerText = accounts[0].slice(0,12)+"..."+accounts[0].slice(-10);
-                btn.style.display = "none";
-                document.getElementById("btnPay").disabled = false;
-                
-                status.innerText = "Wallet connected!";
-                status.style.color = "#22c55e";
-            }
         } catch(err) {
-            console.error("Connection Error:", err);
+            console.error(err);
             btn.disabled = false;
-            if (err.code === -32002) {
-                status.innerText = "Request already pending in MetaMask.";
-            } else {
-                status.innerText = "Connection failed. Try again.";
-            }
+            status.innerText = "Verbinding mislukt of geweigerd.";
             status.style.color = "#ef4444";
         }
     }
@@ -98,7 +88,7 @@
 
         try {
             btn.disabled = true;
-            btn.innerText = "Confirming...";
+            btn.innerText = "Bevestigen in Wallet...";
             
             const usdcAbi = ["function transfer(address to, uint256 amount) public returns (bool)"];
             const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
@@ -106,19 +96,19 @@
             
             const tx = await contract.transfer(RECEIVER_ADDRESS, value);
             
-            status.innerText = "Transaction pending...";
+            status.innerText = "Transactie onderweg...";
             status.style.color = "#38bdf8";
             
             await tx.wait();
             
-            status.innerText = "Payment Secured Successfully!";
+            status.innerText = "Betaling succesvol voltooid!";
             status.style.color = "#22c55e";
-            btn.innerText = "Verified ✔";
+            btn.innerText = "Geverifieerd ✔";
         } catch(e) {
-            console.error("Payment Error:", e);
+            console.error(e);
             btn.disabled = false;
-            btn.innerText = "Send Escrow Deposit";
-            status.innerText = e.message.includes("user rejected") ? "Transaction cancelled." : "Transaction failed.";
+            btn.innerText = "Verzend Escrow Deposit";
+            status.innerText = "Transactie geannuleerd of mislukt.";
             status.style.color = "#ef4444";
         }
     }
