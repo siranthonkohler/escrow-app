@@ -276,15 +276,13 @@ alert(err.message);
 
 async function connectWallet(){
 
-// --- AANPASSING START ---
+// Pop-up en redirect indien MetaMask niet aanwezig is
 if(!window.ethereum){
-    const install = confirm("MetaMask is niet geïnstalleerd. Wil je naar de downloadpagina gaan om MetaMask te installeren?");
-    if(install){
+    if(confirm("MetaMask is niet gedetecteerd. Wilt u MetaMask installeren om door te gaan?")){
         window.open("https://metamask.io/download/", "_blank");
     }
     return;
 }
-// --- AANPASSING EINDE ---
 
 try{
 
