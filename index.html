@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escrow Deposit Application</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- LOAD ETHERS FIRST - CRITICAL! -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    
     <style>
         body {
             background-color: #020617;
@@ -48,7 +52,9 @@
             margin-top: 10px;
         }
         .connectBtn { background: #6366f1; color: white; }
+        .connectBtn:hover { background: #4f46e5; }
         .payBtn { background: #22c55e; color: white; }
+        .payBtn:hover:not(:disabled) { background: #16a34a; }
         .payBtn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; border: 1px solid #334155; }
         #status { margin-top: 20px; font-size: 13px; text-align: center; color: #38bdf8; }
         .wallet-info { background: #020617; border: 1px dashed #334155; }
@@ -83,7 +89,6 @@
     <div id="status">Please connect your wallet to proceed</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 <script>
     let provider, signer;
     const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
@@ -91,8 +96,17 @@
     const TARGET_CHAIN_ID = "0x1"; 
     let finalTotalString = "0";
 
+    // Check if ethers is loaded
+    function checkEthers() {
+        if (typeof ethers === 'undefined') {
+            console.error("❌ ethers.js library not loaded!");
+            document.getElementById("status").innerText = "⚠️ Loading libraries...";
+            return false;
+        }
+        return true;
+    }
+
     function loadDealData(){
-        // Check local URL first, then try to check parent for Hostinger iframes
         let search = window.location.search;
         if(!search && window.parent !== window) {
             try { search = window.parent.location.search; } catch(e) {}
@@ -120,6 +134,13 @@
         const status = document.getElementById("status");
         const btn = document.getElementById("btnMetaMask");
         
+        // Check if ethers is loaded
+        if (!checkEthers()) {
+            status.innerText = "❌ Library loading error. Refresh page.";
+            status.style.color = "#ef4444";
+            return;
+        }
+        
         console.log("🔍 MetaMask check - window.ethereum:", window.ethereum);
         
         const eth = window.ethereum || (window.parent && window.parent.ethereum);
@@ -128,7 +149,7 @@
 
         if(!eth){
             console.error("❌ MetaMask/Web3 provider not found");
-            alert("MetaMask not found. Please use a Web3 enabled browser.");
+            alert("MetaMask not found. Please install MetaMask or use a Web3 enabled browser.");
             status.innerText = "❌ MetaMask not found";
             status.style.color = "#ef4444";
             return;
@@ -178,6 +199,13 @@
         const btn = document.getElementById("btnPay");
         const status = document.getElementById("status");
         
+        // Check if ethers is loaded
+        if (!checkEthers()) {
+            status.innerText = "❌ Library loading error. Refresh page.";
+            status.style.color = "#ef4444";
+            return;
+        }
+        
         try {
             btn.disabled = true;
             btn.innerText = "Waiting for approval...";
@@ -185,5 +213,39 @@
             console.log("💰 Sending payment...");
             console.log("Amount:", finalTotalString, "USDC");
             
-            const usdcAbi = ["function transfer(address to, uint256](#)*
-
+            const usdcAbi = ["function transfer(address to, uint256 amount) public returns (bool)"];
+            const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
+            const value = ethers.utils.parseUnits(finalTotalString, 6);
+            
+            console.log("📝 Creating transaction...");
+            const tx = await contract.transfer(RECEIVER_ADDRESS, value);
+            console.log("📤 Transaction submitted:", tx.hash);
+            
+            status.innerText = "⏳ Processing transaction...";
+            status.style.color = "#38bdf8";
+            
+            await tx.wait();
+            
+            console.log("✅ Transaction confirmed!");
+            status.innerText = "✅ Payment Successful!";
+            status.style.color = "#22c55e";
+            btn.innerText = "Paid ✔";
+        } catch(e) {
+            console.error("❌ Transaction error:", e);
+            console.error("Error message:", e.message);
+            
+            btn.disabled = false;
+            btn.innerText = "Confirm Escrow Deposit";
+            status.innerText = "❌ Transaction failed.";
+            status.style.color = "#ef4444";
+        }
+    }
+
+    // Startup check
+    console.log("🚀 Page loaded");
+    console.log("ethers available:", typeof ethers !== 'undefined');
+    console.log("window.ethereum available:", !!window.ethereum);
+</script>
+
+</body>
+</html>
