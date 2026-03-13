@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,6 +94,12 @@ color:#38bdf8;
 .small{
 font-size:12px;
 color:#94a3b8;
+text-align:center;
+margin-top:6px;
+}
+
+.hidden{
+display:none;
 }
 
 </style>
@@ -160,15 +167,19 @@ USDC Balance: <span id="balanceDisplay">-</span>
 
 </div>
 
-<button id="btnConnect" class="connectBtn" onclick="connectWallet()">
+<button id="btnConnect" class="connectBtn hidden" onclick="connectWallet()">
 Connect Wallet
 </button>
 
-<button id="btnDisconnect" class="disconnectBtn" onclick="disconnectWallet()">
+<p id="walletHint" class="small hidden">
+Requires MetaMask wallet
+</p>
+
+<button id="btnDisconnect" class="disconnectBtn hidden" onclick="disconnectWallet()">
 Disconnect Wallet
 </button>
 
-<button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>
+<button id="btnDeposit" class="payBtn hidden" onclick="sendPayment()" disabled>
 Confirm Escrow Deposit
 </button>
 
@@ -225,11 +236,9 @@ return Number(num.toFixed(6));
 }
 
 function createHash(str){
-
 return ethers.utils.keccak256(
 ethers.utils.toUtf8Bytes(str)
 );
-
 }
 
 function prepareDeal(){
@@ -264,7 +273,10 @@ document.getElementById("sumAmount").innerText=
 total.toLocaleString("en-US",{minimumFractionDigits:2});
 
 document.getElementById("status").innerText=
-"Escrow prepared. Connect wallet.";
+"Escrow prepared. Connect wallet to continue.";
+
+document.getElementById("btnConnect").classList.remove("hidden");
+document.getElementById("walletHint").classList.remove("hidden");
 
 }catch(err){
 
@@ -277,8 +289,18 @@ alert(err.message);
 async function connectWallet(){
 
 if(!window.ethereum){
-alert("MetaMask not installed");
+
+document.getElementById("status").innerText =
+"No crypto wallet detected. Redirecting to install MetaMask...";
+
+setTimeout(()=>{
+
+window.open("https://metamask.io/download/","_blank");
+
+},1200);
+
 return;
+
 }
 
 try{
@@ -292,8 +314,10 @@ signer=provider.getSigner();
 
 const address=accounts[0];
 
-document.getElementById("walletDisplay").innerText=
-address;
+document.getElementById("walletDisplay").innerText=address;
+
+document.getElementById("btnDisconnect").classList.remove("hidden");
+document.getElementById("btnDeposit").classList.remove("hidden");
 
 const network=await provider.getNetwork();
 
@@ -310,8 +334,7 @@ params:[{chainId:"0x1"}]
 provider=new ethers.providers.Web3Provider(window.ethereum);
 signer=provider.getSigner();
 
-document.getElementById("networkDisplay").innerText=
-"Ethereum Mainnet";
+document.getElementById("networkDisplay").innerText="Ethereum Mainnet";
 
 }
 
@@ -335,13 +358,11 @@ formatted+" USDC";
 
 document.getElementById("btnDeposit").disabled=false;
 
-document.getElementById("status").innerText=
-"Wallet connected";
+document.getElementById("status").innerText="Wallet connected";
 
 }catch(err){
 
 console.error(err);
-
 alert("Wallet connection failed");
 
 }
@@ -359,8 +380,7 @@ document.getElementById("balanceDisplay").innerText="-";
 
 document.getElementById("btnDeposit").disabled=true;
 
-document.getElementById("status").innerText=
-"Wallet disconnected";
+document.getElementById("status").innerText="Wallet disconnected";
 
 }
 
@@ -425,3 +445,4 @@ document.getElementById("status").innerText=
 
 </body>
 </html>
+```
