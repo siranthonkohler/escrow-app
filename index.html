@@ -3,38 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Escrow Deposit Application</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<title>Escrow Form - Start Transaction</title>
 <style>
-body { background:#020617; display:flex; justify-content:center; align-items:center; min-height:100vh; font-family:'Inter',sans-serif; margin:0;}
-#escrowDepositApp { max-width:440px; width:90%; background:#0f172a; color:white; padding:30px; border-radius:20px; box-shadow:0 20px 50px rgba(0,0,0,0.6); border:1px solid #1e293b;}
-h2{text-align:center;margin-bottom:25px;font-weight:600;}
-.summaryBox{background:#1e293b;padding:18px;border-radius:14px;margin-bottom:15px;font-size:14px;border:1px solid #334155;}
-.summaryBox p{margin:10px 0; display:flex; justify-content:space-between;}
-.label{color:#94a3b8;}
-button{width:100%;padding:16px;border:none;border-radius:14px;font-weight:600;font-size:16px;cursor:pointer;transition:0.2s;margin-top:10px;}
-.connectBtn{background:#f97316;color:white;} /* Oranje high-ticket */
-.connectBtn:hover{background:#ea580c;}
-.payBtn{background:#22c55e;color:white;}
-.payBtn:hover:not(:disabled){background:#16a34a;}
-.payBtn:disabled{background:#1e293b;color:#475569;cursor:not-allowed;border:1px solid #334155;}
-#status{margin-top:20px;font-size:13px;text-align:center;color:#38bdf8;}
-.wallet-info{background:#020617;border:1px dashed #334155;}
+* {margin:0;padding:0;box-sizing:border-box;}
+body {font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+#escrowFormApp {max-width:480px;background:#0f172a;color:white;padding:30px;border-radius:16px;box-shadow:0 15px 40px rgba(0,0,0,0.5);width:100%;}
+#escrowFormApp h2 {margin-top:0;font-weight:600;text-align:center;margin-bottom:20px;font-size:24px;}
+#escrowFormApp label {display:block;margin-top:15px;font-weight:500;color:#cbd5e1;}
+#escrowFormApp input {width:100%;padding:12px;margin-top:8px;border-radius:10px;border:1px solid #334155;background:#020617;color:white;font-size:14px;}
+#escrowFormApp input:focus {outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.1);}
+#escrowFormApp button {margin-top:25px;width:100%;padding:14px;border:none;border-radius:12px;background:#6366f1;color:white;font-weight:600;font-size:16px;cursor:pointer;transition:0.3s;}
+#escrowFormApp button:hover {background:#4f46e5;}
+#escrowFormApp button:active {transform:scale(0.98);}
+#escrowFormApp button:disabled {background:#64748b;cursor:not-allowed;opacity:0.6;}
 </style>
 </head>
 <body>
+<div id="escrowFormApp">
+<h2>Start Your Escrow Transaction</h2>
+<form id="escrowForm">
+<label>Buyer Name</label>
+<input name="buyer" type="text" placeholder="John Smith" required>
+<label>Seller Name</label>
+<input name="seller" type="text" placeholder="LuxuryCars Ltd" required>
+<label>Email</label>
+<input name="email" type="email" placeholder="buyer@example.com" required>
+<label>Asset Description</label>
+<input name="assetType" type="text" placeholder="Luxury Car / Watch / etc." required>
+<label>Deposit Amount (USDC)</label>
+<input name="amount" type="number" placeholder="1000.00" step="0.01" required>
+<button type="submit">Initiate Escrow</button>
+</form>
+</div>
 
-<div id="escrowDepositApp">
-<h2>Escrow Deposit (USDC)</h2>
+<script>
+document.getElementById('escrowForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Verzamel form data
+    const formData = new FormData(this);
+    const uniqueID = "MRD-" + Math.floor(Date.now() / 1000);
+    formData.append('dealID', uniqueID);
 
-<div class="summaryBox">
-<p><span class="label">Deal ID</span> <strong id="dealID">Loading...</strong></p>
-<p><span class="label">Buyer</span> <span id="buyer">-</span></p>
-<p><span class="label">Seller</span> <span id="seller">-</span></p>
-<p><span class="label">Asset Type</span> <span id="assetType">-</span></p>
-<hr style="border:0;border-top:1px solid #334155;margin:15px 0;">
-<p><span class="label">Amount</span>
-<span style="font-size:18px;color:#22c55e;font-weight:bold;">
+    const params = new URLSearchParams(formData);
+
+    // Open de DApp in een nieuw tabblad direct vanuit user click
+    const url = "https://siranthonkohler.github.io/escrow-app/index.html?" + params.toString();
+    window.open(url, "_blank"); // MetaMask trigger werkt hier
+});
+</script>
+</body>
+</html><span style="font-size:18px;color:#22c55e;font-weight:bold;">
 <span id="amountDisplay">0.00</span> USDC
 </span></p>
 <div id="feeDisplay" style="font-size:11px;color:#94a3b8;text-align:right;">Includes 1.5% fee</div>
