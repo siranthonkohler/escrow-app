@@ -120,39 +120,56 @@
         const status = document.getElementById("status");
         const btn = document.getElementById("btnMetaMask");
         
+        console.log("🔍 MetaMask check - window.ethereum:", window.ethereum);
+        
         const eth = window.ethereum || (window.parent && window.parent.ethereum);
+        
+        console.log("🔍 eth object found:", eth);
 
         if(!eth){
+            console.error("❌ MetaMask/Web3 provider not found");
             alert("MetaMask not found. Please use a Web3 enabled browser.");
+            status.innerText = "❌ MetaMask not found";
+            status.style.color = "#ef4444";
             return;
         }
 
         try {
             btn.innerText = "Connecting...";
+            console.log("📡 Requesting accounts...");
             
             // Network switch request
             try {
+                console.log("🌐 Switching to Ethereum Mainnet...");
                 await eth.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: TARGET_CHAIN_ID }],
                 });
+                console.log("✅ Network switched successfully");
             } catch (switchError) {
-                console.log("Network switch skipped or failed.");
+                console.log("⚠️ Network switch skipped or failed:", switchError.message);
             }
 
             const accounts = await eth.request({ method: 'eth_requestAccounts' });
+            console.log("✅ Accounts received:", accounts);
+            
             provider = new ethers.providers.Web3Provider(eth);
             signer = provider.getSigner();
             
             document.getElementById("wallet").innerText = accounts[0];
             btn.style.display = "none";
             document.getElementById("btnPay").disabled = false;
-            status.innerText = "Wallet connected successfully!";
+            status.innerText = "✅ Wallet connected successfully!";
             status.style.color = "#22c55e";
+            
+            console.log("🎉 Connection successful!");
         } catch(err) {
-            console.error(err);
+            console.error("❌ Connection error:", err);
+            console.error("Error code:", err.code);
+            console.error("Error message:", err.message);
+            
             btn.innerText = "Connect MetaMask";
-            status.innerText = "Connection refused.";
+            status.innerText = `❌ Error: ${err.message}`;
             status.style.color = "#ef4444";
         }
     }
@@ -164,26 +181,9 @@
         try {
             btn.disabled = true;
             btn.innerText = "Waiting for approval...";
-            const usdcAbi = ["function transfer(address to, uint256 amount) public returns (bool)"];
-            const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
-            const value = ethers.utils.parseUnits(finalTotalString, 6);
             
-            const tx = await contract.transfer(RECEIVER_ADDRESS, value);
-            status.innerText = "Processing transaction...";
-            await tx.wait();
+            console.log("💰 Sending payment...");
+            console.log("Amount:", finalTotalString, "USDC");
             
-            status.innerText = "Payment Successful!";
-            status.style.color = "#22c55e";
-            btn.innerText = "Paid ✔";
-        } catch(e) {
-            console.error(e);
-            btn.disabled = false;
-            btn.innerText = "Confirm Escrow Deposit";
-            status.innerText = "Transaction failed.";
-            status.style.color = "#ef4444";
-        }
-    }
-</script>
-
-</body>
-</html>
+            const usdcAbi = ["function transfer(address to, uint256](#)*
+
