@@ -83,10 +83,10 @@
     <h2>Secure Escrow</h2>
 
     <form id="escrowForm">
-        <div class="input-group"><label>Buyer Name</label><input id="buyer" placeholder="Required" required></div>
-        <div class="input-group"><label>Seller Name</label><input id="seller" placeholder="Required" required></div>
-        <div class="input-group"><label>Email</label><input id="email" type="email" placeholder="Required" required></div>
-        <div class="input-group"><label>Asset Description</label><input id="asset" placeholder="Optional"></div>
+        <div class="input-group"><label>Buyer Name</label><input id="buyer" required></div>
+        <div class="input-group"><label>Seller Name</label><input id="seller" required></div>
+        <div class="input-group"><label>Email</label><input id="email" type="email" required></div>
+        <div class="input-group"><label>Asset Description</label><input id="asset"></div>
         <div class="input-group"><label>Amount (USDC)</label><input id="amount" placeholder="1000.00" required></div>
         <button type="button" class="btn-gradient" onclick="prepareDeal()">Create Transaction</button>
     </form>
@@ -104,7 +104,7 @@
     <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
     <button id="btnDisconnect" class="btn-outline" onclick="disconnectWallet()">Disconnect</button>
 
-    <div id="status">Fill in all fields to start</div>
+    <div id="status">Please fill in the fields to start</div>
     <div class="wallet-info">
         Wallet: <span id="walletDisplay">Not connected</span><br>
         Network: <span id="networkDisplay">Unknown</span> | Balance: <span id="balanceDisplay">-</span>
@@ -122,7 +122,7 @@
         let v = value.trim().replace(/\s/g, "").replace(",", ".");
         v = v.replace(/[^0-9.]/g, "");
         let num = Number(v);
-        if (!isFinite(num) || num <= 0) throw new Error("Please enter a valid amount");
+        if (!isFinite(num) || num <= 0) return null;
         return Number(num.toFixed(6));
     }
 
@@ -132,15 +132,22 @@
         const email = document.getElementById("email").value.trim();
         const amountStr = document.getElementById("amount").value.trim();
 
-        // Check of verplichte velden leeg zijn
+        // 1. Check if fields are empty
         if (!buyer || !seller || !email || !amountStr) {
-            alert("Please fill in all required fields (Buyer, Seller, Email, and Amount)");
+            alert("Please fill in all required fields.");
             document.getElementById("status").innerText = "Error: Missing information";
             return;
         }
 
+        // 2. Validate amount
+        const amount = parseAmount(amountStr);
+        if (amount === null) {
+            alert("Please enter a valid amount.");
+            document.getElementById("status").innerText = "Error: Invalid amount";
+            return;
+        }
+
         try {
-            const amount = parseAmount(amountStr);
             const total = (amount + (amount * 0.015)).toFixed(6);
             finalAmount = total;
 
@@ -151,8 +158,7 @@
             document.getElementById("sumAmount").innerText = Number(total).toLocaleString("en-US", {minimumFractionDigits: 2});
             document.getElementById("status").innerText = "Transaction created. Now connect your wallet.";
         } catch (err) { 
-            alert(err.message); 
-            document.getElementById("status").innerText = "Invalid amount format";
+            alert("An error occurred. Please check your inputs.");
         }
     }
 
@@ -167,43 +173,27 @@
             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
             signer = provider.getSigner();
             document.getElementById("walletDisplay").innerText = accounts[0].substring(0,6) + "..." + accounts[0].substring(38);
-            
             const network = await provider.getNetwork();
             document.getElementById("networkDisplay").innerText = network.chainId === 1 ? "Ethereum" : "Wrong Network";
-            
-            if (network.chainId !== 1) {
-                await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x1" }] });
-            }
-            
+            if (network.chainId !== 1) await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x1" }] });
             const contract = new ethers.Contract(USDC_ADDRESS, ["function balanceOf(address) view returns(uint256)"], provider);
             const bal = await contract.balanceOf(accounts[0]);
             document.getElementById("balanceDisplay").innerText = Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
-            
             document.getElementById("btnDeposit").disabled = false;
-            document.getElementById("status").innerText = "Wallet connected. You can now confirm the deposit.";
-        } catch (err) { 
-            console.error(err); 
-            document.getElementById("status").innerText = "Connection failed.";
-        }
+            document.getElementById("status").innerText = "Wallet connected";
+        } catch (err) { console.error(err); }
     }
 
     async function sendPayment() {
-        if (finalAmount === "0") {
-            alert("Please create a transaction first.");
-            return;
-        }
+        if (finalAmount === "0") return;
         try {
-            document.getElementById("status").innerText = "Initiating transaction...";
             const contract = new ethers.Contract(USDC_ADDRESS, ["function transfer(address to, uint256 amount) returns (bool)"], signer);
             const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 100000 });
-            document.getElementById("status").innerText = "Waiting for blockchain confirmation...";
+            document.getElementById("status").innerText = "Confirming...";
             await tx.wait();
             document.getElementById("status").innerText = "Payment successful!";
             document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${tx.hash}" target="_blank" style="color:var(--primary)">View on Etherscan</a>`;
-        } catch (err) { 
-            console.error(err);
-            document.getElementById("status").innerText = "Transaction failed or rejected."; 
-        }
+        } catch (err) { document.getElementById("status").innerText = "Failed."; }
     }
 
     function disconnectWallet() { location.reload(); }
