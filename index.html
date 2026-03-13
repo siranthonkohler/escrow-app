@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #020617; /* Donkere achtergrond voor als de iframe laadt */
+            background-color: #020617;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -60,27 +60,27 @@
     <h2>Escrow Deposit (USDC)</h2>
 
     <div class="summaryBox">
-        <p><span class="label">Deal ID</span> <strong id="dealID">Laden...</strong></p>
-        <p><span class="label">Koper</span> <span id="buyer">-</span></p>
-        <p><span class="label">Verkoper</span> <span id="seller">-</span></p>
-        <p><span class="label">Type Asset</span> <span id="assetType">-</span></p>
+        <p><span class="label">Deal ID</span> <strong id="dealID">Loading...</strong></p>
+        <p><span class="label">Buyer</span> <span id="buyer">-</span></p>
+        <p><span class="label">Seller</span> <span id="seller">-</span></p>
+        <p><span class="label">Asset Type</span> <span id="assetType">-</span></p>
         <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
-        <p><span class="label">Bedrag</span> <span style="font-size:18px; color:#22c55e; font-weight:bold;"><span id="amountDisplay">0.00</span> USDC</span></p>
-        <div id="feeDisplay" style="font-size:11px; color:#94a3b8; text-align: right;">Inclusief 1.5% fee</div>
+        <p><span class="label">Amount</span> <span style="font-size:18px; color:#22c55e; font-weight:bold;"><span id="amountDisplay">0.00</span> USDC</span></p>
+        <div id="feeDisplay" style="font-size:11px; color:#94a3b8; text-align: right;">Includes 1.5% fee</div>
     </div>
 
     <div class="summaryBox wallet-info">
-        <small style="color:#94a3b8">Verbonden Wallet</small><br>
-        <span id="wallet" style="font-family:monospace; font-size: 12px;">Niet verbonden</span>
+        <small style="color:#94a3b8">Connected Wallet</small><br>
+        <span id="wallet" style="font-family:monospace; font-size: 11px;">Not connected</span>
     </div>
 
     <div id="actionArea">
-        <button id="btnMetaMask" class="connectBtn" onclick="connectMetaMask()">Verbind MetaMask</button>
+        <button id="btnMetaMask" class="connectBtn" onclick="connectMetaMask()">Connect MetaMask</button>
     </div>
 
-    <button id="btnPay" class="payBtn" onclick="sendPayment()" disabled>Bevestig Escrow Deposit</button>
+    <button id="btnPay" class="payBtn" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
 
-    <div id="status">Verbind je wallet om door te gaan</div>
+    <div id="status">Please connect your wallet to proceed</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
@@ -92,7 +92,13 @@
     let finalTotalString = "0";
 
     function loadDealData(){
-        const params = new URLSearchParams(window.location.search);
+        // Check local URL first, then try to check parent for Hostinger iframes
+        let search = window.location.search;
+        if(!search && window.parent !== window) {
+            try { search = window.parent.location.search; } catch(e) {}
+        }
+        
+        const params = new URLSearchParams(search);
         const rawAmount = (params.get("amount") || "0").replace(',', '.').replace(/[^0-9.]/g, '');
         const numAmount = parseFloat(rawAmount) || 0;
         
@@ -105,7 +111,7 @@
         document.getElementById("seller").innerText = params.get("seller") || "N/A";
         document.getElementById("assetType").innerText = params.get("assetType") || "N/A";
         document.getElementById("amountDisplay").innerText = numAmount.toLocaleString('en-US',{minimumFractionDigits:2});
-        document.getElementById("feeDisplay").innerText = `Fee (1.5%): ${fee.toFixed(2)} USDC | Totaal: ${total.toFixed(2)} USDC`;
+        document.getElementById("feeDisplay").innerText = `Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
     }
 
     window.addEventListener('DOMContentLoaded', loadDealData);
@@ -114,31 +120,40 @@
         const status = document.getElementById("status");
         const btn = document.getElementById("btnMetaMask");
         
-        if(!window.ethereum){
-            alert("MetaMask niet gevonden. Gebruik de MetaMask browser of extensie.");
+        const eth = window.ethereum || (window.parent && window.parent.ethereum);
+
+        if(!eth){
+            alert("MetaMask not found. Please use a Web3 enabled browser.");
             return;
         }
 
         try {
-            btn.innerText = "Bezig...";
-            await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: TARGET_CHAIN_ID }],
-            });
+            btn.innerText = "Connecting...";
+            
+            // Network switch request
+            try {
+                await eth.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: TARGET_CHAIN_ID }],
+                });
+            } catch (switchError) {
+                console.log("Network switch skipped or failed.");
+            }
 
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            provider = new ethers.providers.Web3Provider(window.ethereum);
+            const accounts = await eth.request({ method: 'eth_requestAccounts' });
+            provider = new ethers.providers.Web3Provider(eth);
             signer = provider.getSigner();
             
             document.getElementById("wallet").innerText = accounts[0];
             btn.style.display = "none";
             document.getElementById("btnPay").disabled = false;
-            status.innerText = "Wallet succesvol verbonden!";
+            status.innerText = "Wallet connected successfully!";
             status.style.color = "#22c55e";
         } catch(err) {
             console.error(err);
-            btn.innerText = "Verbind MetaMask";
-            status.innerText = "Verbinding geweigerd.";
+            btn.innerText = "Connect MetaMask";
+            status.innerText = "Connection refused.";
+            status.style.color = "#ef4444";
         }
     }
 
@@ -148,21 +163,24 @@
         
         try {
             btn.disabled = true;
-            btn.innerText = "Wachten op goedkeuring...";
+            btn.innerText = "Waiting for approval...";
             const usdcAbi = ["function transfer(address to, uint256 amount) public returns (bool)"];
             const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
             const value = ethers.utils.parseUnits(finalTotalString, 6);
             
             const tx = await contract.transfer(RECEIVER_ADDRESS, value);
-            status.innerText = "Transactie verwerken...";
+            status.innerText = "Processing transaction...";
             await tx.wait();
             
-            status.innerText = "Betaling geslaagd!";
-            btn.innerText = "Betaald ✔";
+            status.innerText = "Payment Successful!";
+            status.style.color = "#22c55e";
+            btn.innerText = "Paid ✔";
         } catch(e) {
+            console.error(e);
             btn.disabled = false;
-            btn.innerText = "Bevestig Escrow Deposit";
-            status.innerText = "Transactie mislukt.";
+            btn.innerText = "Confirm Escrow Deposit";
+            status.innerText = "Transaction failed.";
+            status.style.color = "#ef4444";
         }
     }
 </script>
