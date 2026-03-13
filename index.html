@@ -83,24 +83,25 @@ let finalTotalString = "0";
 document.getElementById('submitBtn').addEventListener('click', async function(){
     const form = document.getElementById('escrowForm');
     const status = document.getElementById('status');
-
-    // --- USER GESTURE: META MASK CONNECT ---
+    
+    // **Force MetaMask popup elke keer**
     if(!window.ethereum){ alert("MetaMask not detected"); return; }
     try{
+        // user gesture connect
         const accounts = await ethereum.request({ method:'eth_requestAccounts' });
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
         document.getElementById('wallet').innerText = accounts[0];
-        status.innerText = "✅ Wallet connected";
+        status.innerText = "✅ Wallet connected (please confirm)";
         status.style.color = "#22c55e";
     }catch(err){
         console.error(err);
         status.innerText = "❌ MetaMask connection failed";
         status.style.color = "#ef4444";
-        return; // stop flow als connect mislukt
+        return; 
     }
 
-    // --- VUL SUMMARY ---
+    // Vul summary
     const fd = new FormData(form);
     const uniqueID = "MRD-" + Math.floor(Date.now()/1000);
     const buyer = fd.get('buyer');
@@ -114,43 +115,4 @@ document.getElementById('submitBtn').addEventListener('click', async function(){
 
     document.getElementById('dealID').innerText = uniqueID;
     document.getElementById('buyerSummary').innerText = buyer;
-    document.getElementById('sellerSummary').innerText = seller;
-    document.getElementById('assetTypeSummary').innerText = assetType;
-    document.getElementById('amountDisplay').innerText = amount.toFixed(2);
-    document.getElementById('feeDisplay').innerText = `Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
-
-    // Zet form readonly
-    Array.from(form.elements).forEach(el => { if(el.tagName !== "BUTTON") el.readOnly = true; });
-    this.disabled = true;
-
-    // Activeer confirm button
-    document.getElementById('btnPay').disabled = false;
-});
-
-document.getElementById('btnPay').addEventListener('click', async function(){
-    if(!signer){ alert("Connect wallet first"); return; }
-    const btn = this;
-    const status = document.getElementById('status');
-    try{
-        btn.disabled = true;
-        btn.innerText = "Waiting for approval...";
-        const usdcAbi = ["function transfer(address to,uint256 amount) public returns(bool)"];
-        const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
-        const value = ethers.utils.parseUnits(finalTotalString,6);
-        const tx = await contract.transfer(RECEIVER_ADDRESS,value);
-        status.innerText = "⏳ Processing transaction";
-        await tx.wait();
-        status.innerText = "✅ Payment Successful";
-        status.style.color = "#22c55e";
-        btn.innerText = "Paid ✔";
-    }catch(e){
-        console.error(e);
-        btn.disabled = false;
-        btn.innerText = "Confirm Escrow Deposit";
-        status.innerText = "❌ Transaction failed";
-        status.style.color = "#ef4444";
-    }
-});
-</script>
-</body>
-</html>
+    document.getElementById('sellerSummary').i
