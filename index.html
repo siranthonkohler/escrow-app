@@ -1,132 +1,169 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Escrow Form - Start Transaction</title>
-    <style>
-        /* --- exact jouw styling --- */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        #escrowFormApp {
-            font-family: 'Inter', sans-serif;
-            max-width: 480px;
-            background: #0f172a;
-            color: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-            margin: auto;
-            width: 100%;
-        }
-        #escrowFormApp h2 { margin-top: 0; font-weight: 600; text-align: center; margin-bottom: 20px; font-size: 24px; }
-        #escrowFormApp label { display: block; margin-top: 15px; font-weight: 500; color: #cbd5e1; }
-        #escrowFormApp input {
-            width: 100%; padding: 12px; margin-top: 8px; border-radius: 10px; border: 1px solid #334155;
-            background: #020617; color: white; font-size: 14px; box-sizing: border-box;
-        }
-        #escrowFormApp input::-webkit-outer-spin-button, #escrowFormApp input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        #escrowFormApp input[type=number] { -moz-appearance: textfield; }
-        #escrowFormApp input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        #escrowFormApp button {
-            margin-top: 25px; width: 100%; padding: 14px; border: none; border-radius: 12px;
-            background: #6366f1; color: white; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.3s;
-        }
-        #escrowFormApp button:hover { background: #4f46e5; }
-        #escrowFormApp button:active { transform: scale(0.98); }
-        #escrowFormApp button:disabled { background: #64748b; cursor: not-allowed; opacity: 0.6; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escrow Widget</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+#escrowWidget { max-width: 480px; width: 100%; background: #0f172a; color: white; padding: 30px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
+h2 { text-align: center; margin-bottom: 20px; font-weight: 600; font-size: 24px; }
+label { display: block; margin-top: 15px; font-weight: 500; color: #cbd5e1; }
+input { width: 100%; padding: 12px; margin-top: 8px; border-radius: 10px; border: 1px solid #334155; background: #020617; color: white; font-size: 14px; box-sizing: border-box; }
+input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+button { margin-top: 25px; width: 100%; padding: 14px; border: none; border-radius: 12px; background: #6366f1; color: white; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.3s; }
+button:hover { background: #4f46e5; }
+button:disabled { background: #64748b; cursor: not-allowed; opacity: 0.6; }
+.summaryBox { background: #1e293b; padding: 18px; border-radius: 14px; margin-bottom: 15px; font-size: 14px; border: 1px solid #334155; }
+.summaryBox p { margin: 10px 0; display: flex; justify-content: space-between; }
+.label { color: #94a3b8; }
+.connectBtn { background: #6366f1; color: white; }
+.connectBtn:hover { background: #4f46e5; }
+.payBtn { background: #22c55e; color: white; }
+.payBtn:hover:not(:disabled) { background: #16a34a; }
+.payBtn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; border: 1px solid #334155; }
+#status { margin-top: 20px; font-size: 13px; text-align: center; color: #38bdf8; }
+.wallet-info { background: #020617; border: 1px dashed #334155; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 12px; }
+</style>
 </head>
 <body>
-    <div id="escrowFormApp">
-        <h2>Start Your Escrow Transaction</h2>
 
-        <form id="escrowForm">
-            <label>Buyer Name</label>
-            <input name="buyer" type="text" placeholder="John Smith" required>
+<div id="escrowWidget">
+<h2>Start Your Escrow Transaction</h2>
 
-            <label>Seller Name</label>
-            <input name="seller" type="text" placeholder="LuxuryCars Ltd" required>
+<form id="escrowForm">
+<label>Buyer Name</label>
+<input name="buyer" type="text" placeholder="John Smith" required>
 
-            <label>Email</label>
-            <input name="email" type="email" placeholder="buyer@example.com" required>
+<label>Seller Name</label>
+<input name="seller" type="text" placeholder="LuxuryCars Ltd" required>
 
-            <label>Asset Description</label>
-            <input name="assetType" type="text" placeholder="Luxury Car / Watch / etc." required>
+<label>Email</label>
+<input name="email" type="email" placeholder="buyer@example.com" required>
 
-            <label>Deposit Amount (USDC)</label>
-            <input name="amount" type="number" placeholder="1000.00" step="0.01" required>
+<label>Asset Description</label>
+<input name="assetType" type="text" placeholder="Luxury Car / Watch / etc." required>
 
-            <button id="submitBtn" type="submit">Initiate Escrow</button>
-        </form>
-    </div>
+<label>Deposit Amount (USDC)</label>
+<input name="amount" type="number" placeholder="1000.00" step="0.01" required>
 
-    <script>
-    // ------------- nieuw asynchroon submit gedrag -------------
-    document.getElementById('escrowForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
+<button type="submit" id="submitBtn">Initiate Escrow</button>
+</form>
 
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Verwerken...";
+<div id="depositSection" style="display:none;">
+<h2>Escrow Deposit (USDC)</h2>
+<div class="summaryBox">
+<p><span class="label">Deal ID</span> <strong id="dealID"></strong></p>
+<p><span class="label">Buyer</span> <span id="buyerSummary"></span></p>
+<p><span class="label">Seller</span> <span id="sellerSummary"></span></p>
+<p><span class="label">Asset Type</span> <span id="assetTypeSummary"></span></p>
+<hr style="border:0;border-top:1px solid #334155;margin:15px 0;">
+<p><span class="label">Amount</span><span style="font-size:18px;color:#22c55e;font-weight:bold;"><span id="amountDisplay">0.00</span> USDC</span></p>
+<div id="feeDisplay" style="font-size:11px;color:#94a3b8;text-align:right;">Includes 1.5% fee</div>
+</div>
 
-        try {
-            const form = this;
-            const fd = new FormData(form);
-            const uniqueID = "MRD-" + Math.floor(Date.now() / 1000);
-            fd.append('dealID', uniqueID);
+<div class="summaryBox wallet-info">
+<small style="color:#94a3b8">Connected Wallet</small><br>
+<span id="wallet" style="font-family:monospace;font-size:11px;">Not connected</span>
+</div>
 
-            const data = {
-                dealID: uniqueID,
-                buyer: fd.get('buyer') || '',
-                seller: fd.get('seller') || '',
-                email: fd.get('email') || '',
-                assetType: fd.get('assetType') || '',
-                amount: fd.get('amount') || '0'
-            };
+<button id="btnMetaMask" class="connectBtn">Connect MetaMask</button>
+<button id="btnPay" class="payBtn" disabled>Confirm Escrow Deposit</button>
+<div id="status">Please connect your wallet to proceed</div>
+</div>
 
-            // Bewaar tijdelijk in localStorage zodat de dapp het kan lezen
-            localStorage.setItem('escrowData', JSON.stringify(data));
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script>
+let provider, signer;
+const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
+let finalTotalString = "0";
 
-            // Trigger MetaMask connect binnen dezelfde user gesture
-            if (window.ethereum) {
-                try {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    // success - MetaMask prompt zou nu zichtbaar zijn geweest
-                } catch (err) {
-                    // gebruiker kan op 'reject' klikken — we stoppen dan en tonen melding
-                    alert('MetaMask verbinding geweigerd of mislukt. Probeer opnieuw.');
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = "Initiate Escrow";
-                    return;
-                }
-            } else {
-                alert('MetaMask niet gevonden. Installeer MetaMask en probeer opnieuw.');
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Initiate Escrow";
-                return;
-            }
+// Form submit
+document.getElementById('escrowForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Processing...";
 
-            // Redirect (geen window.open). Dapp leest localStorage.
-            const dappUrl = "https://siranthonkohler.github.io/escrow-app/index.html";
-            window.location.href = dappUrl;
+    const fd = new FormData(this);
+    const uniqueID = "MRD-" + Math.floor(Date.now() / 1000);
+    const data = {
+        dealID: uniqueID,
+        buyer: fd.get('buyer'),
+        seller: fd.get('seller'),
+        email: fd.get('email'),
+        assetType: fd.get('assetType'),
+        amount: fd.get('amount')
+    };
 
-        } catch (err) {
-            console.error(err);
-            alert('Er is iets misgegaan. Check console.');
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Initiate Escrow";
-        }
-    });
-    </script>
+    // Bereken fee & totaal
+    const numAmount = parseFloat(data.amount);
+    const fee = +(numAmount*0.015).toFixed(2);
+    const total = +(numAmount+fee).toFixed(2);
+    finalTotalString = total.toString();
+
+    // Vul deposit section
+    document.getElementById('dealID').innerText = data.dealID;
+    document.getElementById('buyerSummary').innerText = data.buyer;
+    document.getElementById('sellerSummary').innerText = data.seller;
+    document.getElementById('assetTypeSummary').innerText = data.assetType;
+    document.getElementById('amountDisplay').innerText = numAmount.toFixed(2);
+    document.getElementById('feeDisplay').innerText = `Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
+
+    // Hide form, show deposit
+    this.style.display='none';
+    document.getElementById('depositSection').style.display='block';
+
+    submitBtn.innerText = "Initiate Escrow";
+});
+
+// MetaMask connect
+document.getElementById('btnMetaMask').addEventListener('click', async function(){
+    const status = document.getElementById('status');
+    try{
+        if(!window.ethereum){ alert("MetaMask not detected"); return; }
+        const accounts = await ethereum.request({method:'eth_requestAccounts'});
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        document.getElementById('wallet').innerText = accounts[0];
+        document.getElementById('btnPay').disabled = false;
+        status.innerText = "✅ Wallet connected";
+        status.style.color = "#22c55e";
+    }catch(err){
+        console.error(err);
+        status.innerText = "❌ MetaMask connection failed";
+        status.style.color = "#ef4444";
+    }
+});
+
+// Pay button
+document.getElementById('btnPay').addEventListener('click', async function(){
+    const status = document.getElementById('status');
+    const btn = document.getElementById('btnPay');
+    if(!signer){ alert("Connect wallet first"); return; }
+    try{
+        btn.disabled=true;
+        btn.innerText="Waiting for approval...";
+        const usdcAbi = ["function transfer(address to,uint256 amount) public returns(bool)"];
+        const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
+        const value = ethers.utils.parseUnits(finalTotalString,6);
+        const tx = await contract.transfer(RECEIVER_ADDRESS,value);
+        status.innerText="⏳ Processing transaction";
+        await tx.wait();
+        status.innerText="✅ Payment Successful";
+        status.style.color="#22c55e";
+        btn.innerText="Paid ✔";
+    }catch(e){
+        console.error(e);
+        btn.disabled=false;
+        btn.innerText="Confirm Escrow Deposit";
+        status.innerText="❌ Transaction failed";
+        status.style.color="#ef4444";
+    }
+});
+</script>
 </body>
 </html>
