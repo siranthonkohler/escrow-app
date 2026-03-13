@@ -5,7 +5,6 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Escrow Transaction</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -116,7 +115,7 @@ color:#38bdf8;
 <input id="asset">
 
 <label>Deposit Amount (USDC)</label>
-<input id="amount" type="number" step="0.01" required>
+<input id="amount" placeholder="1000.00" required>
 
 <button type="button" class="connectBtn" onclick="prepareDeal()">
 Initiate Escrow
@@ -171,8 +170,6 @@ Fill the form to start escrow
 
 <script>
 
-console.log("DEBUG: widget loaded");
-
 let provider;
 let signer;
 
@@ -182,27 +179,36 @@ const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 
 
+function parseAmount(value){
 
-function prepareDeal(){
+if(!value) throw new Error("Amount missing");
 
-console.log("DEBUG: prepareDeal clicked");
+let clean=value.toString()
+.replace(",",".")
+.replace(/[^0-9.]/g,"");
 
-const buyer=document.getElementById("buyer").value;
-const seller=document.getElementById("seller").value;
-const asset=document.getElementById("asset").value;
-const amount=parseFloat(document.getElementById("amount").value);
+let num=parseFloat(clean);
 
-console.log("DEBUG: form values",buyer,seller,asset,amount);
+if(isNaN(num) || num<=0){
+throw new Error("Invalid amount");
+}
 
-if(!buyer||!seller||!amount){
-
-alert("Please fill required fields");
-return;
+return Number(num.toFixed(6));
 
 }
 
-const fee=amount*0.015;
-const total=amount+fee;
+
+function prepareDeal(){
+
+try{
+
+const buyer=document.getElementById("buyer").value.trim();
+const seller=document.getElementById("seller").value.trim();
+const asset=document.getElementById("asset").value.trim();
+const amount=parseAmount(document.getElementById("amount").value);
+
+const fee=Number((amount*0.015).toFixed(6));
+const total=Number((amount+fee).toFixed(6));
 
 finalAmount=total.toFixed(6);
 
@@ -212,11 +218,18 @@ document.getElementById("dealID").innerText=deal;
 document.getElementById("sumBuyer").innerText=buyer;
 document.getElementById("sumSeller").innerText=seller;
 document.getElementById("sumAsset").innerText=asset;
-document.getElementById("sumAmount").innerText=total.toFixed(2);
 
-document.getElementById("btnDeposit").disabled=true;
+document.getElementById("sumAmount").innerText=
+total.toLocaleString("en-US",{minimumFractionDigits:2});
 
-console.log("DEBUG: deal prepared",deal,finalAmount);
+document.getElementById("status").innerText=
+"Escrow prepared. Connect wallet to continue.";
+
+}catch(err){
+
+alert(err.message);
+
+}
 
 }
 
@@ -224,40 +237,28 @@ console.log("DEBUG: deal prepared",deal,finalAmount);
 
 async function connectWallet(){
 
-console.log("DEBUG: connectWallet clicked");
-
 if(!window.ethereum){
-
 alert("MetaMask not installed");
 return;
-
 }
 
 try{
 
+const accounts=await ethereum.request({
+method:"eth_requestAccounts"
+});
+
 provider=new ethers.providers.Web3Provider(window.ethereum);
-
-console.log("DEBUG: provider created");
-
-await provider.send("eth_requestAccounts",[]);
 
 signer=provider.getSigner();
 
-const address=await signer.getAddress();
-
-console.log("DEBUG: signer address",address);
-
-document.getElementById("walletDisplay").innerText=address;
+document.getElementById("walletDisplay").innerText=accounts[0];
 
 const network=await provider.getNetwork();
 
-console.log("DEBUG: chainId",network.chainId);
-
 if(network.chainId!==1){
 
-console.log("DEBUG: requesting network switch");
-
-await window.ethereum.request({
+await ethereum.request({
 method:"wallet_switchEthereumChain",
 params:[{chainId:"0x1"}]
 });
@@ -273,7 +274,8 @@ document.getElementById("status").innerText="Wallet connected";
 
 }catch(err){
 
-console.error("DEBUG ERROR:",err);
+console.error(err);
+alert("Wallet connection failed");
 
 }
 
@@ -283,16 +285,12 @@ console.error("DEBUG ERROR:",err);
 
 async function sendPayment(){
 
-console.log("DEBUG: sendPayment called");
-
-const btn=document.getElementById("btnDeposit");
-
 if(!signer){
-
 alert("Connect wallet first");
 return;
-
 }
+
+const btn=document.getElementById("btnDeposit");
 
 try{
 
@@ -308,23 +306,34 @@ abi,
 signer
 );
 
-console.log("DEBUG: sending amount",finalAmount);
-
 const value=ethers.utils.parseUnits(finalAmount,6);
 
-const tx=await contract.transfer(RECEIVER_ADDRESS,value);
+const tx=await contract.transfer(
+RECEIVER_ADDRESS,
+value,
+{
+gasLimit:120000
+}
+);
 
-console.log("DEBUG: tx submitted",tx.hash);
+document.getElementById("status").innerText=
+"Waiting for confirmation...";
 
 await tx.wait();
 
-console.log("DEBUG: tx confirmed");
+document.getElementById("status").innerText=
+"Escrow deposit successful";
 
-document.getElementById("status").innerText="Escrow deposit successful";
+btn.innerText="Paid ✔";
 
 }catch(err){
 
-console.error("DEBUG TX ERROR:",err);
+console.error(err);
+
+btn.disabled=false;
+
+document.getElementById("status").innerText=
+"Transaction failed or rejected";
 
 }
 
