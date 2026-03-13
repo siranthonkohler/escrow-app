@@ -250,8 +250,14 @@
     }
 
     async function connectWallet() {
+        // --- MetaMask Check & Redirect Logic ---
         if (typeof window.ethereum === 'undefined') {
-            document.getElementById("status").innerText = "MetaMask not found. Please install it.";
+            const statusDiv = document.getElementById("status");
+            statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;font-weight:700;">MetaMask not found. Click here to install.</a>';
+            
+            if(confirm("MetaMask is not installed. Would you like to go to the download page?")){
+                window.open("https://metamask.io/download/", "_blank");
+            }
             return;
         }
 
