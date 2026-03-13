@@ -182,7 +182,7 @@
         </div>
 
         <button type="button" class="btn-gradient" onclick="prepareDeal()">
-            Review Transaction
+            Create Transaction
         </button>
     </form>
 
@@ -225,7 +225,7 @@
         let v = value.trim().replace(/\s/g, "").replace(",", ".");
         v = v.replace(/[^0-9.]/g, "");
         let num = Number(v);
-        if (!isFinite(num) || num <= 0) throw new Error("Ongeldig bedrag");
+        if (!isFinite(num) || num <= 0) throw new Error("Invalid amount");
         return Number(num.toFixed(6));
     }
 
@@ -251,15 +251,13 @@
 
     async function connectWallet() {
         if (typeof window.ethereum === 'undefined') {
-            document.getElementById("status").innerText = "Installeer MetaMask";
+            document.getElementById("status").innerText = "MetaMask not found. Please install it.";
             return;
         }
 
         try {
-            // Forceer een popup van MetaMask als deze niet opent
             const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
             
-            // Initialiseer provider opnieuw om zeker te zijn van actuele staat
             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
             signer = provider.getSigner();
             
@@ -288,7 +286,7 @@
 
         } catch (err) {
             console.error(err);
-            document.getElementById("status").innerText = "Verbinding mislukt of geweigerd.";
+            document.getElementById("status").innerText = "Connection failed or rejected.";
         }
     }
 
@@ -296,7 +294,6 @@
         if (!window.ethereum) return;
         
         try {
-            // Altijd provider/signer verversen voor de transactie
             const tempProvider = new ethers.providers.Web3Provider(window.ethereum);
             const tempSigner = tempProvider.getSigner();
 
@@ -304,25 +301,24 @@
             const contract = new ethers.Contract(USDC_ADDRESS, abi, tempSigner);
             const value = ethers.utils.parseUnits(finalAmount, 6);
 
-            document.getElementById("status").innerText = "Bevestig de transactie in MetaMask...";
+            document.getElementById("status").innerText = "Please confirm transaction in MetaMask...";
             
-            // Schat gas voor USDC transfer
             const gasPrice = await tempProvider.getGasPrice();
             const tx = await contract.transfer(RECEIVER_ADDRESS, value, {
-                gasLimit: 100000, // Hard limit voor veiligheid op mainnet
+                gasLimit: 100000,
                 gasPrice: gasPrice
             });
 
-            document.getElementById("status").innerText = "Wachten op blockchain...";
+            document.getElementById("status").innerText = "Waiting for confirmation...";
             const receipt = await tx.wait();
             
-            document.getElementById("status").innerText = "Betaling succesvol!";
-            document.getElementById("btnDeposit").innerText = "BETAALD ✔";
-            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--primary)">Transactie op Etherscan</a>`;
+            document.getElementById("status").innerText = "Payment successful!";
+            document.getElementById("btnDeposit").innerText = "PAID ✔";
+            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--primary)">View on Etherscan</a>`;
 
         } catch (err) {
             console.error(err);
-            document.getElementById("status").innerText = "Transactie mislukt of geannuleerd.";
+            document.getElementById("status").innerText = "Transaction failed or cancelled.";
         }
     }
 
@@ -332,7 +328,7 @@
         document.getElementById("walletDisplay").innerText = "Not connected";
         document.getElementById("balanceDisplay").innerText = "-";
         document.getElementById("btnDeposit").disabled = true;
-        document.getElementById("status").innerText = "Verbinding verbroken.";
+        document.getElementById("status").innerText = "Wallet disconnected.";
     }
 </script>
 </body>
