@@ -276,7 +276,6 @@ alert(err.message);
 
 async function connectWallet(){
 
-// Verbeterde check: kijkt specifiek naar ethereum object
 if (typeof window.ethereum === 'undefined') {
     const statusDiv = document.getElementById("status");
     statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;">MetaMask niet gevonden. Klik hier om te installeren.</a>';
@@ -392,12 +391,10 @@ signer
 const value=
 ethers.utils.parseUnits(finalAmount,6);
 
+// Wijziging: gasLimit verwijderd zodat MetaMask dit automatisch berekent
 const tx=await contract.transfer(
 RECEIVER_ADDRESS,
-value,
-{
-gasLimit:120000
-}
+value
 );
 
 document.getElementById("status").innerText=
