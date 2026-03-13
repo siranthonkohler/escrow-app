@@ -4,49 +4,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Escrow Application</title>
+<title>Escrow Widget</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
 
-*{margin:0;padding:0;box-sizing:border-box;}
-
 body{
 font-family:'Inter',sans-serif;
-background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
-min-height:100vh;
+background:#020617;
 display:flex;
-align-items:center;
 justify-content:center;
-padding:20px;
+align-items:center;
+min-height:100vh;
+margin:0;
 }
 
-/* FORM */
+.widget{
+width:440px;
+max-width:95%;
+}
 
-#escrowFormApp{
-font-family:'Inter',sans-serif;
-max-width:480px;
+.card{
 background:#0f172a;
-color:white;
 padding:30px;
-border-radius:16px;
-box-shadow:0 15px 40px rgba(0,0,0,0.5);
-width:100%;
+border-radius:20px;
+border:1px solid #1e293b;
+box-shadow:0 20px 50px rgba(0,0,0,0.6);
+color:white;
 }
 
-#escrowFormApp h2{
+h2{
 text-align:center;
 margin-bottom:20px;
 }
 
-#escrowFormApp label{
+label{
 display:block;
 margin-top:15px;
 color:#cbd5e1;
 }
 
-#escrowFormApp input{
+input{
 width:100%;
 padding:12px;
 margin-top:8px;
@@ -56,85 +55,30 @@ background:#020617;
 color:white;
 }
 
-#escrowFormApp button{
-margin-top:25px;
+button{
 width:100%;
 padding:14px;
 border:none;
 border-radius:12px;
-background:#6366f1;
-color:white;
+margin-top:18px;
 font-weight:600;
-font-size:16px;
 cursor:pointer;
 }
 
-#escrowFormApp button:hover{
-background:#4f46e5;
-}
-
-/* DEPOSIT */
-
-#escrowDepositApp{
-display:none;
-max-width:440px;
-width:100%;
-background:#0f172a;
-color:white;
-padding:30px;
-border-radius:20px;
-box-shadow:0 20px 50px rgba(0,0,0,0.6);
-border:1px solid #1e293b;
-}
+.primary{background:#6366f1;color:white;}
+.payBtn{background:#22c55e;color:white;}
 
 .summaryBox{
 background:#1e293b;
-padding:18px;
-border-radius:14px;
+padding:15px;
+border-radius:12px;
 margin-bottom:15px;
-font-size:14px;
-border:1px solid #334155;
 }
 
 .summaryBox p{
-margin:10px 0;
 display:flex;
 justify-content:space-between;
-}
-
-.label{color:#94a3b8;}
-
-button{
-width:100%;
-padding:16px;
-border:none;
-border-radius:14px;
-font-weight:600;
-font-size:16px;
-cursor:pointer;
-margin-top:10px;
-}
-
-.connectBtn{background:#6366f1;color:white;}
-.payBtn{background:#22c55e;color:white;}
-
-.payBtn:disabled{
-background:#1e293b;
-color:#475569;
-cursor:not-allowed;
-border:1px solid #334155;
-}
-
-.wallet-info{
-background:#020617;
-border:1px dashed #334155;
-}
-
-#status{
-margin-top:20px;
-font-size:13px;
-text-align:center;
-color:#38bdf8;
+margin:6px 0;
 }
 
 </style>
@@ -143,63 +87,52 @@ color:#38bdf8;
 
 <body>
 
+<div class="widget">
+
 <!-- FORM -->
 
-<div id="escrowFormApp">
+<div id="formStep" class="card">
 
-<h2>Start Your Escrow Transaction</h2>
+<h2>Start Escrow</h2>
 
 <form id="escrowForm">
 
-<label>Buyer Name</label> <input name="buyer" type="text" required>
+<label>Buyer</label> <input name="buyer" required>
 
-<label>Seller Name</label> <input name="seller" type="text" required>
+<label>Seller</label> <input name="seller" required>
 
 <label>Email</label> <input name="email" type="email" required>
 
-<label>Asset Description</label> <input name="assetType" type="text" required>
+<label>Asset</label> <input name="assetType" required>
 
-<label>Deposit Amount (USDC)</label> <input name="amount" type="number" step="0.01" required>
+<label>Amount (USDC)</label> <input name="amount" type="number" step="0.01" required>
 
-<button type="submit">Initiate Escrow</button>
+<button class="primary">Initiate Escrow</button>
 
 </form>
 
 </div>
 
-<!-- DEPOSIT APP -->
+<!-- DEPOSIT -->
 
-<div id="escrowDepositApp">
+<div id="depositStep" class="card" style="display:none">
 
-<h2>Escrow Deposit (USDC)</h2>
+<h2>Escrow Deposit</h2>
 
 <div class="summaryBox">
-<p><span class="label">Deal ID</span> <strong id="dealID">Loading...</strong></p>
-<p><span class="label">Buyer</span> <span id="buyer">-</span></p>
-<p><span class="label">Seller</span> <span id="seller">-</span></p>
-<p><span class="label">Asset Type</span> <span id="assetType">-</span></p>
-
-<hr style="border:0;border-top:1px solid #334155;margin:15px 0;">
-
-<p>
-<span class="label">Amount</span>
-<span style="font-size:18px;color:#22c55e;font-weight:bold;">
-<span id="amountDisplay">0.00</span> USDC
-</span>
-</p>
-
-<div id="feeDisplay" style="font-size:11px;color:#94a3b8;text-align:right;">
-Includes 1.5% fee
+<p><span>Deal</span><strong id="dealID"></strong></p>
+<p><span>Buyer</span><span id="buyer"></span></p>
+<p><span>Seller</span><span id="seller"></span></p>
+<p><span>Asset</span><span id="assetType"></span></p>
+<p><span>Amount</span><strong id="amountDisplay"></strong></p>
 </div>
 
+<div class="summaryBox">
+Wallet:<br>
+<span id="wallet">Not connected</span>
 </div>
 
-<div class="summaryBox wallet-info">
-<small style="color:#94a3b8">Connected Wallet</small><br>
-<span id="wallet" style="font-family:monospace;font-size:11px;">Not connected</span>
-</div>
-
-<button id="btnMetaMask" class="connectBtn" onclick="connectMetaMask()">
+<button id="btnMetaMask" class="primary" onclick="connectMetaMask()">
 Connect MetaMask
 </button>
 
@@ -207,8 +140,8 @@ Connect MetaMask
 Confirm Escrow Deposit
 </button>
 
-<div id="status">
-Please connect your wallet to proceed
+<div id="status">Connect wallet</div>
+
 </div>
 
 </div>
@@ -224,7 +157,6 @@ const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 
 let finalTotalString="0";
 
-
 function normalizeUSDC(value){
 
 const cleaned=value.replace(",",".").replace(/[^0-9.]/g,"");
@@ -238,43 +170,7 @@ return Number(num).toFixed(6);
 }
 
 
-/* LOAD DATA (same logic as original dapp) */
-
-function loadDealData(params){
-
-const rawAmount=params.get("amount")||"0";
-
-const normalized=normalizeUSDC(rawAmount);
-
-const numAmount=parseFloat(normalized);
-
-if(numAmount<=0){
-document.getElementById("status").innerText="❌ Invalid amount";
-document.getElementById("btnPay").disabled=true;
-return;
-}
-
-const fee=Number((numAmount*0.015).toFixed(6));
-const total=Number((numAmount+fee).toFixed(6));
-
-finalTotalString=total.toFixed(6);
-
-document.getElementById("dealID").innerText=params.get("dealID")||"N/A";
-document.getElementById("buyer").innerText=params.get("buyer")||"N/A";
-document.getElementById("seller").innerText=params.get("seller")||"N/A";
-document.getElementById("assetType").innerText=params.get("assetType")||"N/A";
-
-document.getElementById("amountDisplay").innerText=
-numAmount.toLocaleString("en-US",{minimumFractionDigits:2});
-
-document.getElementById("feeDisplay").innerText=
-`Fee (1.5%): ${fee.toFixed(2)} USDC | Total: ${total.toFixed(2)} USDC`;
-
-}
-
-
-
-/* FORM SUBMIT */
+/* FORM */
 
 document.getElementById("escrowForm").addEventListener("submit",function(e){
 
@@ -288,36 +184,53 @@ formData.append("dealID",uniqueID);
 
 const params=new URLSearchParams(formData);
 
-document.getElementById("escrowFormApp").style.display="none";
-document.getElementById("escrowDepositApp").style.display="block";
+/* SIMULATE URL */
 
-loadDealData(params);
+history.pushState({},'',"?"+params.toString());
+
+/* SHOW DAPP */
+
+document.getElementById("formStep").style.display="none";
+document.getElementById("depositStep").style.display="block";
+
+loadDealData();
 
 });
 
 
-/* METAMASK */
+function loadDealData(){
 
-async function connectMetaMask(){
+const params=new URLSearchParams(window.location.search);
 
-const status=document.getElementById("status");
-const btn=document.getElementById("btnMetaMask");
+const rawAmount=params.get("amount")||"0";
 
-if(!window.ethereum){
+const normalized=normalizeUSDC(rawAmount);
 
-alert("MetaMask not detected");
+const numAmount=parseFloat(normalized);
 
-status.innerText="❌ MetaMask not detected";
+const fee=Number((numAmount*0.015).toFixed(6));
+const total=Number((numAmount+fee).toFixed(6));
 
-return;
+finalTotalString=total.toFixed(6);
+
+document.getElementById("dealID").innerText=params.get("dealID");
+document.getElementById("buyer").innerText=params.get("buyer");
+document.getElementById("seller").innerText=params.get("seller");
+document.getElementById("assetType").innerText=params.get("assetType");
+
+document.getElementById("amountDisplay").innerText=
+numAmount.toLocaleString("en-US",{minimumFractionDigits:2})+" USDC";
 
 }
 
-try{
 
-btn.innerText="Connecting...";
+/* WALLET */
 
-const accounts=await window.ethereum.request({method:"eth_requestAccounts"});
+async function connectMetaMask(){
+
+const accounts=await window.ethereum.request({
+method:"eth_requestAccounts"
+});
 
 provider=new ethers.providers.Web3Provider(window.ethereum);
 
@@ -325,45 +238,16 @@ signer=provider.getSigner();
 
 document.getElementById("wallet").innerText=accounts[0];
 
-btn.style.display="none";
+document.getElementById("btnMetaMask").style.display="none";
 
 document.getElementById("btnPay").disabled=false;
 
-status.innerText="✅ Wallet connected";
-
-status.style.color="#22c55e";
-
-}catch(err){
-
-status.innerText="❌ Connection failed";
-
-status.style.color="#ef4444";
-
-}
-
 }
 
 
-/* PAYMENT (unchanged logic) */
+/* PAYMENT */
 
 async function sendPayment(){
-
-const btn=document.getElementById("btnPay");
-const status=document.getElementById("status");
-
-if(!signer){
-
-alert("Connect wallet first");
-
-return;
-
-}
-
-try{
-
-btn.disabled=true;
-
-btn.innerText="Waiting for approval...";
 
 const usdcAbi=[
 "function transfer(address to,uint256 amount) public returns(bool)"
@@ -379,29 +263,11 @@ const value=ethers.utils.parseUnits(finalTotalString,6);
 
 const tx=await contract.transfer(RECEIVER_ADDRESS,value);
 
-status.innerText="⏳ Processing transaction";
+document.getElementById("status").innerText="Processing...";
 
 await tx.wait();
 
-status.innerText="✅ Payment Successful";
-
-status.style.color="#22c55e";
-
-btn.innerText="Paid ✔";
-
-}catch(e){
-
-console.error(e);
-
-btn.disabled=false;
-
-btn.innerText="Confirm Escrow Deposit";
-
-status.innerText="❌ Transaction failed";
-
-status.style.color="#ef4444";
-
-}
+document.getElementById("status").innerText="Payment Successful";
 
 }
 
