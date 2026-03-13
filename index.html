@@ -1,55 +1,132 @@
-<script>
-document.getElementById('escrowForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    console.log("📝 Form submit gestart");
-
-    const formData = new FormData(this);
-    const uniqueID = "MRD-" + Math.floor(Date.now() / 1000);
-    formData.append('dealID', uniqueID);
-
-    // Haal alle velden op
-    const buyer = formData.get('buyer');
-    const seller = formData.get('seller');
-    const email = formData.get('email');
-    const assetType = formData.get('assetType');
-    const amount = formData.get('amount');
-
-    // Bouw query string
-    const params = new URLSearchParams({
-        dealID: uniqueID,
-        buyer,
-        seller,
-        email,
-        assetType,
-        amount
-    });
-
-    const githubUrl = "https://siranthonkohler.github.io/escrow-app/index.html?" + params.toString();
-
-    // In plaats van window.open, trigger direct MetaMask connect
-    if(window.ethereum){
-        try {
-            const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-            console.log("✅ Wallet connected:", accounts[0]);
-
-            // Hier kun je eventueel direct deposit doen
-            // Bijvoorbeeld via ethers.js:
-            // const provider = new ethers.providers.Web3Provider(window.ethereum);
-            // const signer = provider.getSigner();
-            // const usdcContract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
-            // await usdcContract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(amount,6));
-
-            // Na alles: redirect naar de dapp (pagina refresh is okay nu)
-            window.location.href = githubUrl;
-
-        } catch(err) {
-            console.error("❌ MetaMask connect failed:", err);
-            alert("MetaMask connect failed. Try again.");
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Escrow Form - Start Transaction</title>
+    <style>
+        /* --- exact jouw styling --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-    } else {
-        alert("MetaMask not detected. Please install MetaMask!");
-    }
-});
-</script>
+        #escrowFormApp {
+            font-family: 'Inter', sans-serif;
+            max-width: 480px;
+            background: #0f172a;
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            margin: auto;
+            width: 100%;
+        }
+        #escrowFormApp h2 { margin-top: 0; font-weight: 600; text-align: center; margin-bottom: 20px; font-size: 24px; }
+        #escrowFormApp label { display: block; margin-top: 15px; font-weight: 500; color: #cbd5e1; }
+        #escrowFormApp input {
+            width: 100%; padding: 12px; margin-top: 8px; border-radius: 10px; border: 1px solid #334155;
+            background: #020617; color: white; font-size: 14px; box-sizing: border-box;
+        }
+        #escrowFormApp input::-webkit-outer-spin-button, #escrowFormApp input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        #escrowFormApp input[type=number] { -moz-appearance: textfield; }
+        #escrowFormApp input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        #escrowFormApp button {
+            margin-top: 25px; width: 100%; padding: 14px; border: none; border-radius: 12px;
+            background: #6366f1; color: white; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.3s;
+        }
+        #escrowFormApp button:hover { background: #4f46e5; }
+        #escrowFormApp button:active { transform: scale(0.98); }
+        #escrowFormApp button:disabled { background: #64748b; cursor: not-allowed; opacity: 0.6; }
+    </style>
+</head>
+<body>
+    <div id="escrowFormApp">
+        <h2>Start Your Escrow Transaction</h2>
+
+        <form id="escrowForm">
+            <label>Buyer Name</label>
+            <input name="buyer" type="text" placeholder="John Smith" required>
+
+            <label>Seller Name</label>
+            <input name="seller" type="text" placeholder="LuxuryCars Ltd" required>
+
+            <label>Email</label>
+            <input name="email" type="email" placeholder="buyer@example.com" required>
+
+            <label>Asset Description</label>
+            <input name="assetType" type="text" placeholder="Luxury Car / Watch / etc." required>
+
+            <label>Deposit Amount (USDC)</label>
+            <input name="amount" type="number" placeholder="1000.00" step="0.01" required>
+
+            <button id="submitBtn" type="submit">Initiate Escrow</button>
+        </form>
+    </div>
+
+    <script>
+    // ------------- nieuw asynchroon submit gedrag -------------
+    document.getElementById('escrowForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Verwerken...";
+
+        try {
+            const form = this;
+            const fd = new FormData(form);
+            const uniqueID = "MRD-" + Math.floor(Date.now() / 1000);
+            fd.append('dealID', uniqueID);
+
+            const data = {
+                dealID: uniqueID,
+                buyer: fd.get('buyer') || '',
+                seller: fd.get('seller') || '',
+                email: fd.get('email') || '',
+                assetType: fd.get('assetType') || '',
+                amount: fd.get('amount') || '0'
+            };
+
+            // Bewaar tijdelijk in localStorage zodat de dapp het kan lezen
+            localStorage.setItem('escrowData', JSON.stringify(data));
+
+            // Trigger MetaMask connect binnen dezelfde user gesture
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    // success - MetaMask prompt zou nu zichtbaar zijn geweest
+                } catch (err) {
+                    // gebruiker kan op 'reject' klikken — we stoppen dan en tonen melding
+                    alert('MetaMask verbinding geweigerd of mislukt. Probeer opnieuw.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Initiate Escrow";
+                    return;
+                }
+            } else {
+                alert('MetaMask niet gevonden. Installeer MetaMask en probeer opnieuw.');
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Initiate Escrow";
+                return;
+            }
+
+            // Redirect (geen window.open). Dapp leest localStorage.
+            const dappUrl = "https://siranthonkohler.github.io/escrow-app/index.html";
+            window.location.href = dappUrl;
+
+        } catch (err) {
+            console.error(err);
+            alert('Er is iets misgegaan. Check console.');
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Initiate Escrow";
+        }
+    });
+    </script>
+</body>
+</html>
