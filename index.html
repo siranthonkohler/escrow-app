@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Escrow Widget - All-in-One</title>
+<title>Escrow Widget - Single Button</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
 body {
@@ -15,7 +15,6 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 20px;
-  color: white;
 }
 
 #escrowWidget {
@@ -25,6 +24,8 @@ body {
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
 }
 
 h2 {
@@ -61,26 +62,18 @@ input:focus {
 button {
   margin-top: 20px;
   width: 100%;
-  padding: 14px;
+  padding: 16px;
   border: none;
   border-radius: 12px;
   font-weight: 600;
   font-size: 16px;
   cursor: pointer;
+  background: #f59e0b;
+  color: white;
   transition: 0.3s;
 }
 
 button:hover { opacity: 0.9; }
-
-.connectBtn { background: #f59e0b; color: white; }
-.payBtn { background: #22c55e; color: white; }
-
-.payBtn:disabled {
-  background: #1e293b;
-  color: #475569;
-  cursor: not-allowed;
-  border: 1px solid #334155;
-}
 
 .summaryBox {
   background: #1e293b;
@@ -89,6 +82,7 @@ button:hover { opacity: 0.9; }
   margin-top: 20px;
   border: 1px solid #334155;
   font-size: 14px;
+  display: none;
 }
 
 .summaryBox p {
@@ -110,6 +104,7 @@ button:hover { opacity: 0.9; }
 <body>
 
 <div id="escrowWidget">
+
 <h2>Escrow Transaction</h2>
 
 <form id="escrowForm">
@@ -128,10 +123,10 @@ button:hover { opacity: 0.9; }
   <label>Deposit Amount (USDC)</label>
   <input name="amount" type="number" placeholder="1000.00" step="0.01" required>
 
-  <button type="submit">Start Escrow</button>
+  <button type="submit">Confirm Deposit</button>
 </form>
 
-<div class="summaryBox" id="summary" style="display:none;">
+<div class="summaryBox" id="summary">
   <p><span class="label">Deal ID</span> <span id="dealID">-</span></p>
   <p><span class="label">Buyer</span> <span id="buyerDisplay">-</span></p>
   <p><span class="label">Seller</span> <span id="sellerDisplay">-</span></p>
@@ -141,10 +136,8 @@ button:hover { opacity: 0.9; }
   <p id="feeDisplay" style="font-size:12px;color:#94a3b8;">Includes 1.5% fee</p>
 </div>
 
-<button id="btnMetaMask" class="connectBtn" style="display:none;" onclick="connectMetaMask()">Connect MetaMask</button>
-<button id="btnPay" class="payBtn" style="display:none;" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
-
 <div id="status">Fill the form to begin</div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -160,14 +153,13 @@ function normalizeUSDC(value){
   return Number(num).toFixed(6);
 }
 
-document.getElementById('escrowForm').addEventListener('submit', function(e){
+document.getElementById('escrowForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const formData = new FormData(this);
   const uniqueID = "MRD-" + Math.floor(Date.now() / 1000);
 
   const buyer = formData.get("buyer");
   const seller = formData.get("seller");
-  const email = formData.get("email");
   const assetType = formData.get("assetType");
   const amount = parseFloat(formData.get("amount"));
 
@@ -177,72 +169,36 @@ document.getElementById('escrowForm').addEventListener('submit', function(e){
   const total = amount + fee;
   finalTotalString = total.toFixed(6);
 
-  // update summary
+  // Update summary
   document.getElementById("dealID").innerText = uniqueID;
   document.getElementById("buyerDisplay").innerText = buyer;
   document.getElementById("sellerDisplay").innerText = seller;
   document.getElementById("assetDisplay").innerText = assetType;
   document.getElementById("amountDisplay").innerText = `${amount.toFixed(2)} USDC`;
   document.getElementById("feeDisplay").innerText = `Fee (1.5%): ${fee.toFixed(2)} | Total: ${total.toFixed(2)} USDC`;
-
   document.getElementById("summary").style.display = "block";
-  document.getElementById("btnMetaMask").style.display = "block";
-  document.getElementById("btnPay").style.display = "block";
-  document.getElementById("btnPay").disabled = true;
-  document.getElementById("status").innerText = "Connect MetaMask to continue";
-});
 
-async function connectMetaMask(){
-  const status=document.getElementById("status");
-  const btn=document.getElementById("btnMetaMask");
+  const status = document.getElementById("status");
+  status.innerText = "Connecting wallet and sending payment...";
 
-  if(!window.ethereum){
-    alert("MetaMask not detected");
-    status.innerText="❌ MetaMask not detected";
-    return;
-  }
-
-  try{
-    btn.innerText="Connecting...";
+  // MetaMask connect & send payment
+  if(!window.ethereum) return alert("MetaMask not detected");
+  try {
     const accounts = await window.ethereum.request({method:"eth_requestAccounts"});
     provider = new ethers.providers.Web3Provider(window.ethereum);
     signer = provider.getSigner();
-    document.getElementById("status").innerText = "✅ Wallet connected";
-    document.getElementById("btnPay").disabled = false;
-    document.getElementById("walletDisplay")?.remove();
-    btn.style.display="none";
-  }catch(err){
-    console.error(err);
-    status.innerText="❌ Connection failed";
-  }
-}
-
-async function sendPayment(){
-  const btn=document.getElementById("btnPay");
-  const status=document.getElementById("status");
-  if(!signer) return alert("Connect wallet first");
-
-  try{
-    btn.disabled=true;
-    btn.innerText="Waiting for approval...";
-
     const usdcAbi = ["function transfer(address to,uint256 amount) public returns(bool)"];
     const contract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
     const value = ethers.utils.parseUnits(finalTotalString,6);
-
     const tx = await contract.transfer(RECEIVER_ADDRESS,value);
-    status.innerText="⏳ Processing transaction";
+    status.innerText = "⏳ Processing transaction...";
     await tx.wait();
-
-    status.innerText="✅ Payment Successful";
-    btn.innerText="Paid ✔";
-  }catch(e){
-    console.error(e);
-    btn.disabled=false;
-    btn.innerText="Confirm Escrow Deposit";
-    status.innerText="❌ Transaction failed";
+    status.innerText = "✅ Payment Successful";
+  } catch(err){
+    console.error(err);
+    status.innerText = "❌ Transaction failed";
   }
-}
+});
 </script>
 </body>
 </html>
