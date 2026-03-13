@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escrow Form - Start Transaction</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -20,9 +15,7 @@
             justify-content: center;
             padding: 20px;
         }
-
         #escrowFormApp {
-            font-family: 'Inter', sans-serif;
             max-width: 480px;
             background: #0f172a;
             color: white;
@@ -32,7 +25,6 @@
             margin: auto;
             width: 100%;
         }
-
         #escrowFormApp h2 {
             margin-top: 0;
             font-weight: 600;
@@ -40,14 +32,7 @@
             margin-bottom: 20px;
             font-size: 24px;
         }
-
-        #escrowFormApp label {
-            display: block;
-            margin-top: 15px;
-            font-weight: 500;
-            color: #cbd5e1;
-        }
-
+        #escrowFormApp label { display: block; margin-top: 15px; font-weight: 500; color: #cbd5e1; }
         #escrowFormApp input {
             width: 100%;
             padding: 12px;
@@ -59,23 +44,6 @@
             font-size: 14px;
             box-sizing: border-box;
         }
-
-        #escrowFormApp input::-webkit-outer-spin-button,
-        #escrowFormApp input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        #escrowFormApp input[type=number] {
-            -moz-appearance: textfield;
-        }
-
-        #escrowFormApp input:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
         #escrowFormApp button {
             margin-top: 25px;
             width: 100%;
@@ -89,42 +57,24 @@
             cursor: pointer;
             transition: 0.3s;
         }
-
-        #escrowFormApp button:hover {
-            background: #4f46e5;
-        }
-
-        #escrowFormApp button:active {
-            transform: scale(0.98);
-        }
-
-        #escrowFormApp button:disabled {
-            background: #64748b;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
+        #escrowFormApp button:hover { background: #4f46e5; }
+        #escrowFormApp button:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
     <div id="escrowFormApp">
         <h2>Start Your Escrow Transaction</h2>
-
         <form id="escrowForm">
             <label>Buyer Name</label>
             <input name="buyer" type="text" placeholder="John Smith" required>
-
             <label>Seller Name</label>
             <input name="seller" type="text" placeholder="LuxuryCars Ltd" required>
-
             <label>Email</label>
             <input name="email" type="email" placeholder="buyer@example.com" required>
-
             <label>Asset Description</label>
             <input name="assetType" type="text" placeholder="Luxury Car / Watch / etc." required>
-
             <label>Deposit Amount (USDC)</label>
             <input name="amount" type="number" placeholder="1000.00" step="0.01" required>
-
             <button type="submit">Initiate Escrow</button>
         </form>
     </div>
@@ -141,12 +91,14 @@
             formData.append('dealID', uniqueID);
 
             const params = new URLSearchParams(formData);
-            const githubUrl = "https://siranthonkohler.github.io/escrow-app/index.html?" + params.toString();
             
-            console.log("🚀 URL die ik probeer op te openen:", githubUrl);
+            // LET OP: open deposit.html in plaats van index.html
+            const depositUrl = "https://siranthonkohler.github.io/escrow-app/deposit.html?" + params.toString();
+            
+            console.log("🚀 Deposit URL:", depositUrl);
             
             // Nieuw tabblad openen zodat MetaMask kan triggeren
-            window.open(githubUrl, "_blank");
+            window.open(depositUrl, "_blank");
         });
     </script>
 </body>
