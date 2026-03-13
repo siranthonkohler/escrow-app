@@ -10,9 +10,9 @@
             --bg-dark: #020617;
             --card-bg: #0f172a;
             --border: #1e293b;
-            --primary: #6366f1;
-            --secondary: #a855f7;
-            --accent: #f97316;
+            --primary: #6366f1; /* Indigo */
+            --secondary: #a855f7; /* Purple */
+            --accent: #f97316; /* Orange */
             --success: #22c55e;
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
@@ -30,7 +30,7 @@
         }
 
         #escrowWidget {
-            max-width: 480px;
+            max-width: 460px;
             width: 90%;
             background: var(--card-bg);
             padding: 32px;
@@ -50,6 +50,8 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .input-group { margin-bottom: 16px; }
+
         label {
             display: block;
             margin-bottom: 6px;
@@ -61,14 +63,14 @@
         input {
             width: 100%;
             padding: 12px 16px;
-            margin-bottom: 16px;
             border-radius: 12px;
             border: 1px solid var(--border);
             background: #020617;
             color: white;
             box-sizing: border-box;
             transition: all 0.2s;
-            font-family: inherit;
+            font-size: 15px;
+            margin-bottom: 8px;
         }
 
         input:focus {
@@ -78,62 +80,90 @@
         }
 
         .summary {
-            margin: 20px 0;
+            margin: 24px 0;
             background: rgba(30, 41, 59, 0.5);
-            padding: 18px;
+            padding: 20px;
             border-radius: 16px;
-            border: 1px solid var(--border);
-            font-size: 14px;
+            border: 1px dashed var(--border);
         }
 
         .summary p {
             display: flex;
             justify-content: space-between;
-            margin: 8px 0;
+            margin: 10px 0;
+            font-size: 14px;
         }
+
+        .summary strong { color: var(--accent); }
 
         button {
             width: 100%;
             padding: 14px;
-            margin-top: 10px;
+            margin-top: 12px;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-weight: 600;
             font-size: 15px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: transform 0.1s, opacity 0.2s;
         }
 
-        .btn-initiate { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
-        .btn-connect { background: var(--primary); color: white; }
-        .btn-disconnect { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
-        .btn-disconnect:hover { color: white; border-color: var(--text-dim); }
-        .btn-pay { background: var(--success); color: white; }
-        
-        .btn-pay:disabled {
+        button:active { transform: scale(0.98); }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            margin-top: 8px;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text-dim);
+            color: white;
+        }
+
+        .payBtn {
+            background: var(--success);
+            color: white;
+            margin-top: 10px;
+        }
+
+        .payBtn:disabled {
             background: #1e293b;
             color: #475569;
             cursor: not-allowed;
+            box-shadow: none;
             border: 1px solid var(--border);
         }
 
         #status {
-            margin-top: 15px;
+            margin-top: 20px;
             text-align: center;
             font-size: 13px;
+            font-weight: 500;
             color: #38bdf8;
-            min-height: 1.5em;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(56, 189, 248, 0.05);
         }
 
-        .wallet-details {
+        .wallet-info-section {
             font-size: 11px;
             color: var(--text-dim);
-            text-align: center;
             margin-top: 15px;
+            text-align: center;
+            line-height: 1.6;
             border-top: 1px solid var(--border);
             padding-top: 15px;
-            line-height: 1.6;
         }
+
+        hr { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
     </style>
 </head>
 <body>
@@ -143,20 +173,22 @@
 
     <form id="escrowForm">
         <label>Buyer Name</label>
-        <input id="buyer" placeholder="Full name" required>
+        <input id="buyer" required>
 
         <label>Seller Name</label>
-        <input id="seller" placeholder="Full name" required>
+        <input id="seller" required>
 
-        <label>Email & Asset</label>
-        <input id="email" type="email" placeholder="Email" required>
-        <input id="asset" placeholder="Asset description">
+        <label>Email</label>
+        <input id="email" type="email" required>
+
+        <label>Asset Description</label>
+        <input id="asset">
 
         <label>Deposit Amount (USDC)</label>
         <input id="amount" placeholder="1000.00" required>
 
-        <button type="button" class="btn-initiate" onclick="prepareDeal()">
-            Review & Initiate
+        <button type="button" class="btn-gradient" onclick="prepareDeal()">
+            Initiate Escrow
         </button>
     </form>
 
@@ -165,7 +197,9 @@
         <p><span>Buyer</span><span id="sumBuyer">-</span></p>
         <p><span>Seller</span><span id="sumSeller">-</span></p>
         <p><span>Asset</span><span id="sumAsset">-</span></p>
-        <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+
+        <hr>
+
         <p>
             <span>Total</span>
             <span style="color:var(--success); font-weight:bold;">
@@ -175,146 +209,136 @@
         <p style="font-size:11px; color:var(--text-dim);">Includes 1.5% fee</p>
     </div>
 
-    <button id="btnConnect" class="btn-connect" onclick="connectWallet()">Connect Wallet</button>
-    
-    <button id="btnDeposit" class="btn-pay" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
-    
-    <button id="btnDisconnect" class="btn-disconnect" onclick="disconnectWallet()">Disconnect</button>
+    <button id="btnConnect" class="btn-gradient" onclick="connectWallet()">Connect Wallet</button>
+    <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
+    <button id="btnDisconnect" class="btn-outline" onclick="disconnectWallet()">Disconnect Wallet</button>
 
-    <div id="status">Fill the form to start</div>
-    
-    <div class="wallet-details">
+    <div id="status">Fill the form to start escrow</div>
+
+    <div class="wallet-info-section">
         Wallet: <span id="walletDisplay">Not connected</span><br>
-        Network: <span id="networkDisplay">Unknown</span> | Balance: <span id="balanceDisplay">-</span>
+        Network: <span id="networkDisplay">Unknown</span><br>
+        USDC Balance: <span id="balanceDisplay">-</span>
     </div>
 
-    <div id="txLink" style="text-align:center;margin-top:10px;"></div>
+    <div id="txLink" style="text-align:center; margin-top:15px;"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
 <script>
-let provider=null;
-let signer=null;
-let finalAmount="0";
-let dealHash="";
+    let provider=null;
+    let signer=null;
+    let finalAmount="0";
+    let dealHash="";
 
-const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
+    const USDC_ADDRESS="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+    const RECEIVER_ADDRESS="0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 
-function parseAmount(value){
-    let v=value.trim().replace(/\s/g,"");
-    const comma=v.lastIndexOf(",");
-    const dot=v.lastIndexOf(".");
-    if(comma>-1 && dot>-1){
-        if(comma>dot){ v=v.replace(/\./g,"").replace(",","."); }
-        else{ v=v.replace(/,/g,""); }
-    }else if(comma>-1){ v=v.replace(",","."); }
-    v=v.replace(/[^0-9.]/g,"");
-    let num=Number(v);
-    if(!isFinite(num) || num<=0){ throw new Error("Invalid amount"); }
-    return Number(num.toFixed(6));
-}
-
-function createHash(str){
-    return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(str));
-}
-
-function prepareDeal(){
-    try{
-        const buyer=document.getElementById("buyer").value.trim();
-        const seller=document.getElementById("seller").value.trim();
-        const asset=document.getElementById("asset").value.trim();
-        const amount=parseAmount(document.getElementById("amount").value);
-
-        const fee=Number((amount*0.015).toFixed(6));
-        const total=Number((amount+fee).toFixed(6));
-
-        finalAmount=total.toFixed(6);
-        const deal="MRD-"+Math.floor(Date.now()/1000);
-        dealHash=createHash(buyer+seller+asset+finalAmount);
-
-        document.getElementById("dealID").innerText=deal;
-        document.getElementById("sumBuyer").innerText=buyer;
-        document.getElementById("sumSeller").innerText=seller;
-        document.getElementById("sumAsset").innerText=asset || "Not specified";
-        document.getElementById("sumAmount").innerText=total.toLocaleString("en-US",{minimumFractionDigits:2});
-        document.getElementById("status").innerText="Escrow prepared. Connect wallet.";
-    }catch(err){
-        alert(err.message);
+    function parseAmount(value){
+        let v=value.trim().replace(/\s/g,"");
+        const comma=v.lastIndexOf(",");
+        const dot=v.lastIndexOf(".");
+        if(comma>-1 && dot>-1){
+            if(comma>dot){ v=v.replace(/\./g,"").replace(",","."); }
+            else{ v=v.replace(/,/g,""); }
+        }else if(comma>-1){ v=v.replace(",","."); }
+        v=v.replace(/[^0-9.]/g,"");
+        let num=Number(v);
+        if(!isFinite(num) || num<=0){ throw new Error("Invalid amount"); }
+        return Number(num.toFixed(6));
     }
-}
 
-async function connectWallet(){
-    if (typeof window.ethereum === 'undefined') {
-        const statusDiv = document.getElementById("status");
-        statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:var(--accent);text-decoration:underline;">MetaMask niet gevonden. Klik hier om te installeren.</a>';
-        if(confirm("MetaMask is niet geïnstalleerd. Wilt u naar de downloadpagina gaan?")){
-            window.open("https://metamask.io/download/", "_blank");
+    function createHash(str){ return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(str)); }
+
+    function prepareDeal(){
+        try{
+            const buyer=document.getElementById("buyer").value.trim();
+            const seller=document.getElementById("seller").value.trim();
+            const asset=document.getElementById("asset").value.trim();
+            const amount=parseAmount(document.getElementById("amount").value);
+
+            const fee=Number((amount*0.015).toFixed(6));
+            const total=Number((amount+fee).toFixed(6));
+
+            finalAmount=total.toFixed(6);
+            const deal="MRD-"+Math.floor(Date.now()/1000);
+            dealHash=createHash(buyer+seller+asset+finalAmount);
+
+            document.getElementById("dealID").innerText=deal;
+            document.getElementById("sumBuyer").innerText=buyer;
+            document.getElementById("sumSeller").innerText=seller;
+            document.getElementById("sumAsset").innerText=asset || "Not specified";
+
+            document.getElementById("sumAmount").innerText=
+            total.toLocaleString("en-US",{minimumFractionDigits:2});
+
+            document.getElementById("status").innerText="Escrow prepared. Connect wallet.";
+        }catch(err){ alert(err.message); }
+    }
+
+    async function connectWallet(){
+        if (typeof window.ethereum === 'undefined') {
+            const statusDiv = document.getElementById("status");
+            statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;">MetaMask niet gevonden. Klik hier om te installeren.</a>';
+            if(confirm("MetaMask is niet geïnstalleerd. Wilt u naar de downloadpagina gaan?")){
+                window.open("https://metamask.io/download/", "_blank");
+            }
+            return;
         }
-        return;
-    }
-    try{
-        const accounts=await ethereum.request({method:"eth_requestAccounts"});
-        provider=new ethers.providers.Web3Provider(window.ethereum);
-        signer=provider.getSigner();
-        const address=accounts[0];
-        document.getElementById("walletDisplay").innerText=address.substring(0,6)+"..."+address.substring(address.length-4);
-        
-        const network=await provider.getNetwork();
-        document.getElementById("networkDisplay").innerText=network.chainId===1 ? "Ethereum Mainnet" : "Wrong Network";
-
-        if(network.chainId!==1){
-            await ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x1"}]});
+        try{
+            const accounts=await ethereum.request({method:"eth_requestAccounts"});
             provider=new ethers.providers.Web3Provider(window.ethereum);
             signer=provider.getSigner();
-            document.getElementById("networkDisplay").innerText="Ethereum Mainnet";
+            const address=accounts[0];
+            document.getElementById("walletDisplay").innerText=address.substring(0,6)+"..."+address.substring(address.length-4);
+            const network=await provider.getNetwork();
+            document.getElementById("networkDisplay").innerText=network.chainId===1 ? "Ethereum Mainnet" : "Wrong Network";
+
+            if(network.chainId!==1){
+                await ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x1"}]});
+                provider=new ethers.providers.Web3Provider(window.ethereum);
+                signer=provider.getSigner();
+                document.getElementById("networkDisplay").innerText="Ethereum Mainnet";
+            }
+
+            const abi=["function balanceOf(address) view returns(uint256)"];
+            const contract=new ethers.Contract(USDC_ADDRESS, abi, provider);
+            const bal=await contract.balanceOf(address);
+            const formatted=Number(ethers.utils.formatUnits(bal,6)).toLocaleString("en-US",{minimumFractionDigits:2});
+            document.getElementById("balanceDisplay").innerText=formatted+" USDC";
+            document.getElementById("btnDeposit").disabled=false;
+            document.getElementById("status").innerText="Wallet connected";
+        }catch(err){ console.error(err); alert("Wallet connection failed"); }
+    }
+
+    function disconnectWallet(){
+        provider=null; signer=null;
+        document.getElementById("walletDisplay").innerText="Not connected";
+        document.getElementById("networkDisplay").innerText="Unknown";
+        document.getElementById("balanceDisplay").innerText="-";
+        document.getElementById("btnDeposit").disabled=true;
+        document.getElementById("status").innerText="Wallet disconnected";
+    }
+
+    async function sendPayment(){
+        if(!signer){ alert("Connect wallet first"); return; }
+        try{
+            const abi=["function transfer(address to,uint256 amount) returns(bool)"];
+            const contract=new ethers.Contract(USDC_ADDRESS, abi, signer);
+            const value=ethers.utils.parseUnits(finalAmount,6);
+            const tx=await contract.transfer(RECEIVER_ADDRESS, value);
+            document.getElementById("status").innerText="Waiting for confirmation...";
+            const receipt=await tx.wait();
+            document.getElementById("status").innerText="Escrow deposit successful";
+            document.getElementById("btnDeposit").innerText="Paid ✔";
+            const link="https://etherscan.io/tx/"+receipt.transactionHash;
+            document.getElementById("txLink").innerHTML='<a href="'+link+'" target="_blank" style="color:#38bdf8">View on Etherscan</a>';
+        }catch(err){
+            console.error(err);
+            document.getElementById("status").innerText="Transaction failed or rejected";
         }
-
-        const abi=["function balanceOf(address) view returns(uint256)"];
-        const contract=new ethers.Contract(USDC_ADDRESS, abi, provider);
-        const bal=await contract.balanceOf(address);
-        const formatted=Number(ethers.utils.formatUnits(bal,6)).toLocaleString("en-US",{minimumFractionDigits:2});
-
-        document.getElementById("balanceDisplay").innerText=formatted+" USDC";
-        document.getElementById("btnDeposit").disabled=false;
-        document.getElementById("status").innerText="Wallet connected";
-    }catch(err){
-        console.error(err);
-        alert("Wallet connection failed");
     }
-}
-
-function disconnectWallet(){
-    provider=null;
-    signer=null;
-    document.getElementById("walletDisplay").innerText="Not connected";
-    document.getElementById("networkDisplay").innerText="Unknown";
-    document.getElementById("balanceDisplay").innerText="-";
-    document.getElementById("btnDeposit").disabled=true;
-    document.getElementById("status").innerText="Wallet disconnected";
-}
-
-async function sendPayment(){
-    if(!signer){ alert("Connect wallet first"); return; }
-    try{
-        const abi=["function transfer(address to,uint256 amount) returns(bool)"];
-        const contract=new ethers.Contract(USDC_ADDRESS, abi, signer);
-        const value=ethers.utils.parseUnits(finalAmount,6);
-        
-        const tx=await contract.transfer(RECEIVER_ADDRESS, value);
-        document.getElementById("status").innerText="Waiting for confirmation...";
-        const receipt=await tx.wait();
-
-        document.getElementById("status").innerText="Escrow deposit successful";
-        document.getElementById("btnDeposit").innerText="Paid ✔";
-        const link="https://etherscan.io/tx/"+receipt.transactionHash;
-        document.getElementById("txLink").innerHTML='<a href="'+link+'" target="_blank" style="color:#38bdf8">View on Etherscan</a>';
-    }catch(err){
-        console.error(err);
-        document.getElementById("status").innerText="Transaction failed or rejected";
-    }
-}
 </script>
 </body>
 </html>
