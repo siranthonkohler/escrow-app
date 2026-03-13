@@ -187,13 +187,29 @@
     async function sendPayment() {
         if (finalAmount === "0") return;
         try {
+            document.getElementById("status").innerText = "Confirming with MetaMask...";
             const contract = new ethers.Contract(USDC_ADDRESS, ["function transfer(address to, uint256 amount) returns (bool)"], signer);
-            const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 100000 });
-            document.getElementById("status").innerText = "Confirming...";
-            await tx.wait();
+            
+            // GasLimit verhoogd naar 150.000 voor stabiliteit
+            const tx = await contract.transfer(
+                RECEIVER_ADDRESS, 
+                ethers.utils.parseUnits(finalAmount, 6), 
+                { gasLimit: 150000 }
+            );
+            
+            document.getElementById("status").innerText = "Waiting for confirmation...";
+            const receipt = await tx.wait();
+            
             document.getElementById("status").innerText = "Payment successful!";
-            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${tx.hash}" target="_blank" style="color:var(--primary)">View on Etherscan</a>`;
-        } catch (err) { document.getElementById("status").innerText = "Failed."; }
+            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--primary)">View on Etherscan</a>`;
+        } catch (err) { 
+            console.error(err);
+            if (err.code === 4001) {
+                document.getElementById("status").innerText = "Cancelled by user.";
+            } else {
+                document.getElementById("status").innerText = "Transaction failed.";
+            }
+        }
     }
 
     function disconnectWallet() { location.reload(); }
