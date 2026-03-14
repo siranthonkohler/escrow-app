@@ -25,8 +25,10 @@
             align-items:center;
             min-height: 100vh;
             margin: 0;
-            font-family: 'Plus Jakarta Sans', sans-serif; /* Toegepast voor alle tekst */
+            font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--text-main);
+            /* Luxere spacing voor de algemene tekst */
+            letter-spacing: 0.025em; 
         }
 
         #escrowWidget {
@@ -40,11 +42,38 @@
             backdrop-filter: blur(10px);
         }
 
-        h2 { text-align: center; margin-bottom: 24px; font-weight: 700; background: linear-gradient(to right, #818cf8, #f472b6, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { 
+            text-align: center; 
+            margin-bottom: 24px; 
+            font-weight: 700; 
+            background: linear-gradient(to right, #818cf8, #f472b6, #fb923c); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            /* Iets meer ruimte tussen de letters van de kop */
+            letter-spacing: 0.05em; 
+        }
 
         .input-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; color: var(--text-dim); font-size: 13px; font-weight: 500; }
-        input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); background: #020617; color: white; box-sizing: border-box; font-size: 15px; font-family: inherit; }
+        label { 
+            display: block; 
+            margin-bottom: 6px; 
+            color: var(--text-dim); 
+            font-size: 13px; 
+            font-weight: 500;
+            letter-spacing: 0.04em;
+        }
+        input { 
+            width: 100%; 
+            padding: 12px 16px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            background: #020617; 
+            color: white; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+            font-family: inherit;
+            letter-spacing: 0.02em;
+        }
 
         .summary {
             margin: 24px 0;
@@ -66,7 +95,6 @@
         .summary strong, .summary span:last-child { text-align: right; font-weight: 500; }
         #sumAmount { color: var(--success); font-weight: 700; }
 
-        /* Knoppen op 18px zoals gewenst */
         button { 
             width: 100%; 
             padding: 14px; 
@@ -76,8 +104,11 @@
             font-weight: 600; 
             cursor: pointer; 
             transition: 0.2s; 
-            font-size: 18px; 
+            font-size: 16px; 
             font-family: inherit; 
+            /* Extra 'punch' voor de knoppen door spacing */
+            letter-spacing: 0.05em; 
+            text-transform: none;
         }
         
         .btn-gradient { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
@@ -86,7 +117,7 @@
         .payBtn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; }
 
         #status { margin-top: 20px; text-align: center; font-size: 13px; color: #38bdf8; padding: 10px; border-radius: 8px; background: rgba(99, 102, 241, 0.05); }
-        .wallet-info { font-size: 11px; color: var(--text-dim); margin-top: 12px; text-align: center; }
+        .wallet-info { font-size: 11px; color: var(--text-dim); margin-top: 12px; text-align: center; line-height: 1.6; }
         hr { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
     </style>
 </head>
@@ -177,8 +208,7 @@
 
     async function connectWallet() {
         if (typeof window.ethereum === 'undefined') {
-            document.getElementById("status").innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;">MetaMask not found. Click to install.</a>';
-            if(confirm("MetaMask not installed. Go to download page?")) window.open("https://metamask.io/download/", "_blank");
+            document.getElementById("status").innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;">MetaMask not found.</a>';
             return;
         }
         try {
@@ -206,10 +236,7 @@
     }
 
     async function sendPayment() {
-        if (finalAmount === "0") {
-            alert("Please create a transaction first.");
-            return;
-        }
+        if (finalAmount === "0") return;
         try {
             document.getElementById("status").innerText = "Confirming with MetaMask...";
             document.getElementById("btnDeposit").disabled = true;
@@ -230,11 +257,7 @@
         } catch (err) { 
             console.error(err);
             document.getElementById("btnDeposit").disabled = false;
-            if (err.code === 4001) {
-                document.getElementById("status").innerText = "Cancelled by user.";
-            } else {
-                document.getElementById("status").innerText = "Transaction failed.";
-            }
+            document.getElementById("status").innerText = err.code === 4001 ? "Cancelled by user." : "Transaction failed.";
         }
     }
 
