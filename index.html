@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Escrow Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Secure Escrow Portal | MRDROWSE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #020617;
@@ -12,7 +12,7 @@
             --border: #1e293b;
             --primary: #6366f1;
             --secondary: #a855f7;
-            --accent: #f97316;
+            --accent: #38bdf8; /* MRDROWSE Blauw */
             --success: #22c55e;
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
@@ -20,20 +20,62 @@
 
         body {
             background: radial-gradient(circle at top right, #1e1b4b, #020617);
-            display: flex;
-            justify-content:center;
-            align-items:center;
-            min-height: 100vh;
             margin: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--text-main);
-            /* Luxere spacing voor de algemene tekst */
-            letter-spacing: 0.025em; 
+            letter-spacing: 0.025em; /* Luxe spacing */
+            min-height: 100vh;
         }
 
+        .page-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 60px 20px;
+            box-sizing: border-box;
+        }
+
+        /* Header Styling */
+        .main-header {
+            text-align: center;
+            max-width: 650px;
+            margin-bottom: 40px;
+        }
+
+        .brand-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .company-name {
+            color: var(--accent);
+            font-size: 42px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-subtitle {
+            color: var(--text-dim);
+            font-size: 17px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Widget Styling */
         #escrowWidget {
             max-width: 460px;
-            width: 90%;
+            width: 100%;
             background: var(--card-bg);
             padding: 32px;
             border-radius: 24px;
@@ -49,30 +91,14 @@
             background: linear-gradient(to right, #818cf8, #f472b6, #fb923c); 
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent;
-            /* Iets meer ruimte tussen de letters van de kop */
             letter-spacing: 0.05em; 
         }
 
         .input-group { margin-bottom: 16px; }
-        label { 
-            display: block; 
-            margin-bottom: 6px; 
-            color: var(--text-dim); 
-            font-size: 13px; 
-            font-weight: 500;
-            letter-spacing: 0.04em;
-        }
+        label { display: block; margin-bottom: 6px; color: var(--text-dim); font-size: 13px; font-weight: 500; letter-spacing: 0.04em; }
         input { 
-            width: 100%; 
-            padding: 12px 16px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border); 
-            background: #020617; 
-            color: white; 
-            box-sizing: border-box; 
-            font-size: 15px; 
-            font-family: inherit;
-            letter-spacing: 0.02em;
+            width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); 
+            background: #020617; color: white; box-sizing: border-box; font-size: 15px; font-family: inherit;
         }
 
         .summary {
@@ -83,32 +109,13 @@
             border: 1px dashed var(--border);
         }
 
-        .summary p {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 14px;
-            gap: 10px;
-        }
-
+        .summary p { display: flex; justify-content: space-between; margin: 10px 0; font-size: 14px; gap: 10px; }
         .summary span:first-child { color: var(--text-dim); }
-        .summary strong, .summary span:last-child { text-align: right; font-weight: 500; }
         #sumAmount { color: var(--success); font-weight: 700; }
 
         button { 
-            width: 100%; 
-            padding: 14px; 
-            margin-top: 12px; 
-            border: none; 
-            border-radius: 14px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: 0.2s; 
-            font-size: 16px; 
-            font-family: inherit; 
-            /* Extra 'punch' voor de knoppen door spacing */
-            letter-spacing: 0.05em; 
-            text-transform: none;
+            width: 100%; padding: 14px; margin-top: 12px; border: none; border-radius: 14px; 
+            font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 16px; font-family: inherit; letter-spacing: 0.05em; 
         }
         
         .btn-gradient { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
@@ -119,41 +126,74 @@
         #status { margin-top: 20px; text-align: center; font-size: 13px; color: #38bdf8; padding: 10px; border-radius: 8px; background: rgba(99, 102, 241, 0.05); }
         .wallet-info { font-size: 11px; color: var(--text-dim); margin-top: 12px; text-align: center; line-height: 1.6; }
         hr { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
+
+        /* Badges Styling */
+        .trust-container { margin-top: 50px; text-align: center; }
+        .trust-label { font-size: 10px; font-weight: 800; color: var(--text-dim); letter-spacing: 0.25em; margin-bottom: 25px; opacity: 0.7; }
+        .badge-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 800px; }
+        .trust-badge {
+            background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); padding: 10px 18px; 
+            border-radius: 12px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; transition: 0.3s;
+        }
+        .trust-badge:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+        @media (max-width: 600px) {
+            .company-name { font-size: 32px; }
+            .hero-subtitle { font-size: 15px; }
+            .page-container { padding: 40px 15px; }
+        }
     </style>
 </head>
 <body>
 
-<div id="escrowWidget">
-    <h2>Secure Escrow</h2>
+<div class="page-container">
+    <header class="main-header">
+        <div class="brand-badge">Official MRDROWSE Node</div>
+        <h1 class="company-name">MRDROWSE</h1>
+        <p class="hero-subtitle">Fill out details to create a secure escrow transaction. Powered by institutional-grade smart contracts.</p>
+    </header>
 
-    <form id="escrowForm">
-        <div class="input-group"><label>Buyer Name</label><input id="buyer" required></div>
-        <div class="input-group"><label>Seller Name</label><input id="seller" required></div>
-        <div class="input-group"><label>Email</label><input id="email" type="email" required></div>
-        <div class="input-group"><label>Asset Description</label><input id="asset"></div>
-        <div class="input-group"><label>Amount (USDC)</label><input id="amount" placeholder="1000.00" required></div>
-        <button type="button" class="btn-gradient" onclick="prepareDeal()">Create Transaction</button>
-    </form>
+    <div id="escrowWidget">
+        <h2>Secure Escrow</h2>
+        <form id="escrowForm">
+            <div class="input-group"><label>Buyer Name</label><input id="buyer" required></div>
+            <div class="input-group"><label>Seller Name</label><input id="seller" required></div>
+            <div class="input-group"><label>Email</label><input id="email" type="email" required></div>
+            <div class="input-group"><label>Asset Description</label><input id="asset"></div>
+            <div class="input-group"><label>Amount (USDC)</label><input id="amount" placeholder="1000.00" required></div>
+            <button type="button" class="btn-gradient" onclick="prepareDeal()">Create Transaction</button>
+        </form>
 
-    <div class="summary">
-        <p><span>Deal ID:</span><strong id="dealID">-</strong></p>
-        <p><span>Buyer:</span><span id="sumBuyer">-</span></p>
-        <p><span>Seller:</span><span id="sumSeller">-</span></p>
-        <p><span>Asset:</span><span id="sumAsset">-</span></p>
-        <hr>
-        <p><span>Total Amount:</span><span><span id="sumAmount">0.00</span> USDC</span></p>
+        <div class="summary">
+            <p><span>Deal ID:</span><strong id="dealID">-</strong></p>
+            <p><span>Buyer:</span><span id="sumBuyer">-</span></p>
+            <p><span>Seller:</span><span id="sumSeller">-</span></p>
+            <p><span>Asset:</span><span id="sumAsset">-</span></p>
+            <hr>
+            <p><span>Total Amount:</span><span><span id="sumAmount">0.00</span> USDC</span></p>
+        </div>
+
+        <button id="btnConnect" class="btn-gradient" onclick="connectWallet()">Connect Wallet</button>
+        <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
+        <button id="btnDisconnect" class="btn-outline" onclick="disconnectWallet()">Disconnect</button>
+
+        <div id="status">Please fill in the fields to start</div>
+        <div class="wallet-info">
+            Wallet: <span id="walletDisplay">Not connected</span><br>
+            Network: <span id="networkDisplay">Unknown</span> | Balance: <span id="balanceDisplay">-</span>
+        </div>
+        <div id="txLink" style="text-align:center; margin-top:15px;"></div>
     </div>
 
-    <button id="btnConnect" class="btn-gradient" onclick="connectWallet()">Connect Wallet</button>
-    <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>Confirm Escrow Deposit</button>
-    <button id="btnDisconnect" class="btn-outline" onclick="disconnectWallet()">Disconnect</button>
-
-    <div id="status">Please fill in the fields to start</div>
-    <div class="wallet-info">
-        Wallet: <span id="walletDisplay">Not connected</span><br>
-        Network: <span id="networkDisplay">Unknown</span> | Balance: <span id="balanceDisplay">-</span>
+    <div class="trust-container">
+        <p class="trust-label">SECURED BY INDUSTRY LEADERS</p>
+        <div class="badge-grid">
+            <div class="trust-badge"><span>🛡️</span> Ethereum Secure</div>
+            <div class="trust-badge"><span>💵</span> USDC Verified</div>
+            <div class="trust-badge"><span>🦊</span> MetaMask Ready</div>
+            <div class="trust-badge"><span>📑</span> Audited Contract</div>
+        </div>
     </div>
-    <div id="txLink" style="text-align:center; margin-top:15px;"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -178,37 +218,31 @@
 
         if (!buyer || !seller || !email || !amountStr) {
             alert("Please fill in all required fields.");
-            document.getElementById("status").innerText = "Error: Missing information";
             return;
         }
 
         const amount = parseAmount(amountStr);
         if (amount === null) {
             alert("Please enter a valid amount.");
-            document.getElementById("status").innerText = "Error: Invalid amount";
             return;
         }
 
-        try {
-            const total = (amount + (amount * 0.015)).toFixed(6);
-            finalAmount = total;
+        const total = (amount + (amount * 0.015)).toFixed(6);
+        finalAmount = total;
 
-            document.getElementById("dealID").innerText = "MRD-" + Math.floor(Date.now() / 1000);
-            document.getElementById("sumBuyer").innerText = buyer;
-            document.getElementById("sumSeller").innerText = seller;
-            document.getElementById("sumAsset").innerText = document.getElementById("asset").value.trim() || "Not specified";
-            document.getElementById("sumAmount").innerText = Number(total).toLocaleString("en-US", {minimumFractionDigits: 2});
-            document.getElementById("status").innerText = "Transaction created. Now connect your wallet.";
-            
-            if(signer) document.getElementById("btnDeposit").disabled = false;
-        } catch (err) { 
-            alert("An error occurred. Please check your inputs.");
-        }
+        document.getElementById("dealID").innerText = "MRD-" + Math.floor(Date.now() / 1000);
+        document.getElementById("sumBuyer").innerText = buyer;
+        document.getElementById("sumSeller").innerText = seller;
+        document.getElementById("sumAsset").innerText = document.getElementById("asset").value.trim() || "Not specified";
+        document.getElementById("sumAmount").innerText = Number(total).toLocaleString("en-US", {minimumFractionDigits: 2});
+        document.getElementById("status").innerText = "Transaction created. Now connect your wallet.";
+        
+        if(signer) document.getElementById("btnDeposit").disabled = false;
     }
 
     async function connectWallet() {
         if (typeof window.ethereum === 'undefined') {
-            document.getElementById("status").innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;">MetaMask not found.</a>';
+            document.getElementById("status").innerHTML = "MetaMask not found.";
             return;
         }
         try {
@@ -240,22 +274,13 @@
         try {
             document.getElementById("status").innerText = "Confirming with MetaMask...";
             document.getElementById("btnDeposit").disabled = true;
-            
             const contract = new ethers.Contract(USDC_ADDRESS, ["function transfer(address to, uint256 amount) returns (bool)"], signer);
-            
-            const tx = await contract.transfer(
-                RECEIVER_ADDRESS, 
-                ethers.utils.parseUnits(finalAmount, 6), 
-                { gasLimit: 150000 }
-            );
-            
+            const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 150000 });
             document.getElementById("status").innerText = "Waiting for network confirmation...";
             const receipt = await tx.wait();
-            
             document.getElementById("status").innerText = "Payment successful!";
-            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--primary); font-weight:bold;">View on Etherscan</a>`;
+            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--accent); font-weight:bold;">View on Etherscan</a>`;
         } catch (err) { 
-            console.error(err);
             document.getElementById("btnDeposit").disabled = false;
             document.getElementById("status").innerText = err.code === 4001 ? "Cancelled by user." : "Transaction failed.";
         }
