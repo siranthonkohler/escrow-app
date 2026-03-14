@@ -353,7 +353,7 @@
             document.getElementById("status").innerText = "Awaiting signature...";
             document.getElementById("btnDeposit").disabled = true;
             const contract = new ethers.Contract(USDC_ADDRESS, ["function transfer(address to, uint256 amount) returns (bool)"], signer);
-            const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 120000 });
+            const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 150000 });
             document.getElementById("status").innerText = "Synchronizing with blockchain...";
             const receipt = await tx.wait();
             document.getElementById("status").innerText = "Settlement successful.";
