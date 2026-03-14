@@ -298,18 +298,15 @@
     }
 
     async function connectWallet() {
-        // --- START REDIRECT LOGICA ---
         if (typeof window.ethereum === 'undefined') {
             const statusDiv = document.getElementById("status");
-            statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;font-weight:700;">MetaMask niet gevonden. Klik hier om te installeren.</a>';
+            statusDiv.innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;">MetaMask niet gevonden. Klik hier om te installeren.</a>';
             
             if(confirm("MetaMask is niet geïnstalleerd. Wilt u naar de downloadpagina gaan?")){
                 window.open("https://metamask.io/download/", "_blank");
             }
             return;
         }
-        // --- EINDE REDIRECT LOGICA ---
-
         try {
             const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
@@ -335,8 +332,7 @@
             document.getElementById("status").innerText = "Awaiting signature...";
             document.getElementById("btnDeposit").disabled = true;
             const contract = new ethers.Contract(USDC_ADDRESS, ["function transfer(address to, uint256 amount) returns (bool)"], signer);
-            // gasLimit verwijderd zodat MetaMask dit automatisch berekent zoals in de oude code
-            const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6));
+            const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 120000 });
             document.getElementById("status").innerText = "Synchronizing with blockchain...";
             const receipt = await tx.wait();
             document.getElementById("status").innerText = "Settlement successful.";
