@@ -367,22 +367,62 @@
         }
     }
 
-    async function sendPayment() {
-        if (finalAmount === "0") return;
-        try {
-            document.getElementById("status").innerText = "Awaiting signature...";
-            document.getElementById("btnDeposit").disabled = true;
-            const contract = new ethers.Contract(USDC_ADDRESS, ["function transfer(address to, uint256 amount) returns (bool)"], signer);
-            const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 150000 });
-            document.getElementById("status").innerText = "Synchronizing with blockchain...";
-            const receipt = await tx.wait();
-            document.getElementById("status").innerText = "Settlement successful.";
-            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:800;">[ VIEW ON ETHERSCAN ]</a>`;
-        } catch (err) { 
-            document.getElementById("btnDeposit").disabled = false;
-            document.getElementById("status").innerText = "Transaction terminated.";
+   async function connectWallet() {
+    // 1. Controleer of de gebruiker op mobiel zit
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // 2. Als er GEEN wallet is (window.ethereum is undefined)
+    if (typeof window.ethereum === 'undefined') {
+        if (isMobile) {
+            // Maak de Deep Link: opent de huidige URL in de MetaMask-browser
+            // We halen 'https://' weg omdat de app-link dat zelf toevoegt
+            const currentUrl = window.location.href.split('//')[1];
+            const metamaskAppDeepLink = "https://metamask.app.link/dapp/" + currentUrl;
+            
+            document.getElementById("status").innerHTML = "Redirecting to MetaMask...";
+            
+            // Stuur de gebruiker direct door naar de MetaMask App
+            window.location.href = metamaskAppDeepLink;
+        } else {
+            // Desktop zonder MetaMask
+            document.getElementById("status").innerHTML = '<a href="https://metamask.io/" target="_blank" style="color:#ef4444;">MetaMask not found. Install extension.</a>';
         }
+        return;
     }
+
+    // 3. Als er WEL een wallet is (Desktop met MetaMask OF mobiel IN de MetaMask browser)
+    try {
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+        signer = provider.getSigner();
+
+        window.ethereum.on('chainChanged', () => window.location.reload());
+
+        document.getElementById("walletDisplay").innerText = accounts[0].substring(0,6) + "..." + accounts[0].substring(38);
+        
+        const network = await provider.getNetwork();
+        document.getElementById("networkDisplay").innerText = network.chainId === 1 ? "Ethereum" : "Wrong Network";
+        
+        if (network.chainId !== 1) {
+            try {
+                await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x1" }] });
+            } catch (switchError) {
+                document.getElementById("status").innerText = "Switch to Ethereum Mainnet.";
+            }
+        }
+
+        const contract = new ethers.Contract(USDC_ADDRESS, ["function balanceOf(address) view returns(uint256)"], provider);
+        const bal = await contract.balanceOf(accounts[0]);
+        document.getElementById("balanceDisplay").innerText = Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
+        
+        if(finalAmount !== "0") document.getElementById("btnDeposit").disabled = false;
+        
+        document.getElementById("status").innerText = "Secure gateway established.";
+    } catch (err) { 
+        console.error(err); 
+        document.getElementById("status").innerText = "Connection refused.";
+    }
+}
 
     function disconnectWallet() { location.reload(); }
 </script>
