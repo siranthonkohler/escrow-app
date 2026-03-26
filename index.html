@@ -340,43 +340,46 @@ const onboard = Onboard({
 let connectedWallet = null;
 
 async function connectWallet() {
-    const popup = document.getElementById("walletPopup");
-    popup.style.display = "none";
-
     try {
+        // Toon popup via Onboard
         const wallets = await onboard.connectWallet();
 
         if (!wallets || wallets.length === 0) {
-    popup.innerHTML = "No wallet detected or connection cancelled. Please install or unlock your wallet.";
-    popup.style.display = "block";
-    document.getElementById("status").innerText = "Access Denied.";
-    return;
-}
-        connectedWallet = wallets[0];
+            document.getElementById("walletPopup").innerText = 
+                "Geen wallet gevonden of verbinding geannuleerd.";
+            document.getElementById("walletPopup").style.display = "block";
+            document.getElementById("status").innerText = "Access Denied.";
+            return;
+        }
+
+       connectedWallet = wallets[0];
         provider = new ethers.providers.Web3Provider(connectedWallet.provider);
         signer = provider.getSigner();
 
         const account = connectedWallet.accounts[0].address;
-        document.getElementById("walletDisplay").innerText = account.substring(0,6) + "..." + account.slice(-4);
+        document.getElementById("walletDisplay").innerText =
+            account.substring(0,6) + "..." + account.slice(-4);
 
         const network = await provider.getNetwork();
-        document.getElementById("networkDisplay").innerText = network.chainId === 1 ? "Ethereum" : "Wrong Network";
+        document.getElementById("networkDisplay").innerText =
+            network.chainId === 1 ? "Ethereum" : "Wrong Network";
 
+        // Optioneel: haal saldo op
         const contract = new ethers.Contract(USDC_ADDRESS, ["function balanceOf(address) view returns(uint256)"], provider);
         const bal = await contract.balanceOf(account);
-        document.getElementById("balanceDisplay").innerText = Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
+        document.getElementById("balanceDisplay").innerText =
+            Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
 
+        document.getElementById("status").innerText = "Wallet connected!";
         if(finalAmount !== "0") document.getElementById("btnDeposit").disabled = false;
-        document.getElementById("status").innerText = "Secure gateway established.";
 
     } catch(err) {
         console.error(err);
-        popup.innerHTML = "No wallet detected or connection cancelled. Please install or unlock your wallet.";
-        popup.style.display = "block";
-        document.getElementById("status").innerText = "Access Denied.";
+        document.getElementById("walletPopup").innerText = 
+            "Wallet connectie mislukt. Probeer opnieuw.";
+        document.getElementById("walletPopup").style.display = "block";
     }
 }
-
 async function disconnectWallet() {
     if (connectedWallet) await onboard.disconnectWallet({ label: connectedWallet.label });
     location.reload();
