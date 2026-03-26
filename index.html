@@ -242,7 +242,6 @@
         </div>
 
         <button id="btnConnect" class="btn-gradient" onclick="connectWallet()">Connect Wallet</button>
-        <div id="walletPopup" style="display:none; color:#f87171; font-size:13px; margin-top:10px; text-align:center;"></div>
         <button id="btnDeposit" class="payBtn" onclick="sendPayment()" disabled>Execute Deposit</button>
         <button id="btnDisconnect" class="btn-outline" onclick="disconnectWallet()">Disconnect System</button>
 
@@ -341,18 +340,15 @@ let connectedWallet = null;
 
 async function connectWallet() {
     try {
-        // Toon popup via Onboard
+        // Toon popup via Onboard V2 (OpenSea-style)
         const wallets = await onboard.connectWallet();
 
         if (!wallets || wallets.length === 0) {
-            document.getElementById("walletPopup").innerText = 
-                "Geen wallet gevonden of verbinding geannuleerd.";
-            document.getElementById("walletPopup").style.display = "block";
-            document.getElementById("status").innerText = "Access Denied.";
+            document.getElementById("status").innerText = "No wallet found or connection canceled.";
             return;
         }
 
-       connectedWallet = wallets[0];
+        connectedWallet = wallets[0];
         provider = new ethers.providers.Web3Provider(connectedWallet.provider);
         signer = provider.getSigner();
 
@@ -365,7 +361,11 @@ async function connectWallet() {
             network.chainId === 1 ? "Ethereum" : "Wrong Network";
 
         // Optioneel: haal saldo op
-        const contract = new ethers.Contract(USDC_ADDRESS, ["function balanceOf(address) view returns(uint256)"], provider);
+        const contract = new ethers.Contract(
+            USDC_ADDRESS,
+            ["function balanceOf(address) view returns(uint256)"],
+            provider
+        );
         const bal = await contract.balanceOf(account);
         document.getElementById("balanceDisplay").innerText =
             Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
@@ -375,9 +375,7 @@ async function connectWallet() {
 
     } catch(err) {
         console.error(err);
-        document.getElementById("walletPopup").innerText = 
-            "Wallet connectie mislukt. Probeer opnieuw.";
-        document.getElementById("walletPopup").style.display = "block";
+        document.getElementById("status").innerText = "Wallet connection failed. Try again.";
     }
 }
 async function disconnectWallet() {
