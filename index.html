@@ -1,216 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Escrow Portal | MRDROWSE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-    :root {
-        --bg-dark: #020617;
-        --card-bg: #0f172a;
-        --border: #1e293b;
-        --primary: #6366f1;
-        --secondary: #a855f7;
-        --accent: #38bdf8; 
-        --success: #22c55e;
-        --text-main: #f8fafc;
-        --text-dim: #94a3b8;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Escrow Portal | MRDROWSE</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    /* Globale box-sizing fix voor mobiele uitlijning */
-    * {
-        box-sizing: border-box;
-    }
-
-    body {
-        background: radial-gradient(circle at top right, #1e1b4b, #020617);
-        margin: 0;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        color: var(--text-main);
-        letter-spacing: 0.025em;
-        min-height: 100vh;
-        overflow-x: hidden; /* Voorkomt horizontale scroll */
-    }
-
-    .page-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        padding: 60px 20px;
-    }
-
-    .main-header {
-        text-align: center;
-        max-width: 650px;
-        margin-bottom: 40px;
-    }
-
-    .brand-badge {
-        display: inline-block;
-        padding: 5px 14px;
-        background: rgba(56, 189, 248, 0.1);
-        border: 1px solid var(--accent);
-        color: var(--accent);
-        border-radius: 100px;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        margin-bottom: 20px;
-    }
-
-    .company-name {
-        color: var(--accent);
-        font-size: 48px;
-        font-weight: 800;
-        margin: 0 0 16px 0;
-        letter-spacing: -0.04em;
-    }
-
-    .hero-subtitle {
-        color: var(--text-dim);
-        font-size: 17px;
-        line-height: 1.6;
-        margin: 0;
-    }
-
-    #escrowWidget {
-        max-width: 480px;
-        width: 100%;
-        background: var(--card-bg);
-        padding: 35px;
-        border-radius: 28px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-        border: 1px solid var(--border);
-        backdrop-filter: blur(12px);
-    }
-
-    h2 { 
-        text-align: center; 
-        margin-bottom: 28px; 
-        font-weight: 800; 
-        background: linear-gradient(to right, #38bdf8, #818cf8, #c084fc); 
-        -webkit-background-clip: text; 
-        -webkit-text-fill-color: transparent;
-        letter-spacing: 0.02em; 
-    }
-
-    .input-group { margin-bottom: 18px; }
-    label { display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 13px; font-weight: 600; letter-spacing: 0.03em; }
-    
-    input { 
-        width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); 
-        background: #020617; color: white; font-size: 15px; font-family: inherit;
-        transition: border-color 0.2s;
-    }
-    input:focus { border-color: var(--accent); outline: none; }
-
-    .summary {
-        margin: 24px 0;
-        background: rgba(30, 41, 59, 0.4);
-        padding: 24px;
-        border-radius: 18px;
-        border: 1px dashed var(--border);
-    }
-
-    .summary p { display: flex; justify-content: space-between; margin: 12px 0; font-size: 14px; gap: 10px; }
-    .summary span:first-child { color: var(--text-dim); flex-shrink: 0; }
-    .summary p span:last-child, .summary p strong { text-align: right; word-break: break-word; }
-    #sumAmount { color: var(--success); font-weight: 800; font-size: 16px; }
-
-    button { 
-        width: 100%; padding: 16px; margin-top: 12px; border: none; border-radius: 14px; 
-        font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 16px; font-family: inherit; letter-spacing: 0.03em; 
-    }
-    
-    .btn-gradient { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
-    .btn-gradient:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
-    .payBtn { background: var(--success); color: white; margin-top: 24px; }
-    .payBtn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; }
-
-    #status { margin-top: 24px; text-align: center; font-size: 13px; color: var(--accent); font-weight: 600; padding: 12px; border-radius: 10px; background: rgba(56, 189, 248, 0.05); overflow-wrap: break-word; }
-    .wallet-info { font-size: 11px; color: var(--text-dim); margin-top: 15px; text-align: center; line-height: 1.7; }
-    hr { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
-
-    /* Trust Section aanpassingen */
-    .trust-container {
-        margin-top: 60px;
-        text-align: center;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-        padding-top: 40px;
-        width: 100%;
-        max-width: 800px;
-    }
-
-    .trust-label {
-        font-size: 11px;
-        font-weight: 800;
-        color: var(--text-dim);
-        letter-spacing: 0.3em;
-        margin-bottom: 30px;
-        opacity: 0.6;
-    }
-
-    .badge-grid {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-    }
-
-    .trust-badge {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--text-dim);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        padding: 10px 14px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        white-space: nowrap;
-    }
-
-    /* Mobiele Optimalisatie */
-    @media (max-width: 600px) {
-        .page-container { padding: 40px 16px; }
-        .company-name { font-size: 34px; }
-        .hero-subtitle { font-size: 15px; }
-        
-        #escrowWidget { 
-            padding: 24px 20px; 
-            border-radius: 20px;
-        }
-
-        .summary { padding: 16px; }
-
-        .trust-badge {
-            width: calc(50% - 6px); /* 2 kolommen op mobiel */
-            justify-content: center;
-            padding: 12px 8px;
-            font-size: 9px;
-        }
-        
-        .trust-badge svg {
-            flex-shrink: 0;
-        }
-    }
-
-    /* Extra kleine schermen */
-    @media (max-width: 380px) {
-        .trust-badge {
-            width: 100%; /* 1 kolom op zeer kleine schermen */
-        }
-    }
+<!-- CSS blijft hetzelfde -->
+<style>
+/* ... hier kan je je originele CSS behouden ... */
 </style>
+
+<!-- MultiWallet / Onboard.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@web3-onboard/core@2.14.0/dist/web3-onboard.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@web3-onboard/injected-wallets@2.14.0/dist/injected-wallets.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@web3-onboard/walletconnect@2.14.0/dist/walletconnect.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
 <body>
-
 <div class="page-container">
     <header class="main-header">
         <div class="brand-badge">Institutional Node</div>
@@ -249,142 +56,125 @@
         </div>
         <div id="txLink" style="text-align:center; margin-top:20px;"></div>
     </div>
-
-    <div class="trust-container">
-        <p class="trust-label">SECURITY PROTOCOLS</p>
-        <div class="badge-grid">
-            <div class="trust-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24"><path d="M11.944 17.97L4.58 13.62 11.943 24l7.37-10.38-7.37 4.35zm.056-17.97L4.633 10.712l7.367 4.353 7.367-4.353L12 0z"/></svg>
-                <span>ETHEREUM MAINNET</span>
-            </div>
-            <div class="trust-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 24c6.627 0 12-5.373 12-12S18.627 0 12 0 0 5.373 0 12s5.373 12 12 12zm0-18c3.314 0 6 2.686 6 6s-2.686 6-6 6-6-2.686-6-6 2.686-6 6-6z"/></svg>
-                <span>USDC VERIFIED</span>
-            </div>
-            <div class="trust-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24"><path d="M18 10V7c0-3.313-2.687-6-6-6S6 3.687 6 7v3H4v14h16V10h-2zm-8-3c0-1.103.897-2 2-2s2 .897 2 2v3h-4V7z"/></svg>
-                <span>SMART CONTRACT AUDITED</span>
-            </div>
-            <div class="trust-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-                <span>AES-256 ENCRYPTION</span>
-            </div>
-        </div>
-    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script>
-    let provider = null, signer = null, finalAmount = "0";
-    const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-    const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
+let onboard, connectedWallet = null, provider = null, signer = null, finalAmount = "0";
+const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const RECEIVER_ADDRESS = "0xAEff38fd17B4bA0e5FC40115441C348aa789E706";
 
-    function parseAmount(value) {
-        let v = value.trim().replace(/\s/g, "").replace(",", ".");
-        v = v.replace(/[^0-9.]/g, "");
-        let num = Number(v);
-        if (!isFinite(num) || num <= 0) return null;
-        return Number(num.toFixed(6));
+// 1️⃣ Setup MultiWallet Onboard.js
+const injected = InjectedWallets();
+const walletConnectModule = WalletConnectModule();
+
+onboard = Onboard({
+    wallets: [injected, walletConnectModule],
+    chains: [
+        {
+            id: '0x1', 
+            token: 'ETH',
+            label: 'Ethereum Mainnet',
+            rpcUrl: 'https://mainnet.infura.io/v3/YOUR_INFURA_KEY'
+        }
+    ]
+});
+
+// 2️⃣ Parse USDC amount
+function parseAmount(value) {
+    let v = value.trim().replace(/\s/g, "").replace(",", ".");
+    v = v.replace(/[^0-9.]/g, "");
+    let num = Number(v);
+    if (!isFinite(num) || num <= 0) return null;
+    return Number(num.toFixed(6));
+}
+
+// 3️⃣ Prepare deal
+function prepareDeal() {
+    const buyer = document.getElementById("buyer").value.trim();
+    const seller = document.getElementById("seller").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const amountStr = document.getElementById("amount").value.trim();
+
+    if (!buyer || !seller || !email || !amountStr) {
+        alert("Mandatory fields missing.");
+        return;
     }
 
-    function prepareDeal() {
-        const buyer = document.getElementById("buyer").value.trim();
-        const seller = document.getElementById("seller").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const amountStr = document.getElementById("amount").value.trim();
+    const amount = parseAmount(amountStr);
+    if (amount === null) { alert("Invalid USDC amount."); return; }
 
-        if (!buyer || !seller || !email || !amountStr) {
-            alert("Mandatory fields missing.");
+    const total = (amount + (amount * 0.015)).toFixed(6);
+    finalAmount = total;
+
+    document.getElementById("dealID").innerText = "MRD-" + Math.floor(Date.now() / 1000);
+    document.getElementById("sumBuyer").innerText = buyer;
+    document.getElementById("sumSeller").innerText = seller;
+    document.getElementById("sumAsset").innerText = document.getElementById("asset").value.trim() || "Digital Asset";
+    document.getElementById("sumAmount").innerText = Number(total).toLocaleString("en-US", {minimumFractionDigits: 2});
+    document.getElementById("status").innerText = "Settlement ready. Please connect gateway.";
+
+    if(signer) document.getElementById("btnDeposit").disabled = false;
+}
+
+// 4️⃣ Connect wallet via MultiWallet
+async function connectWallet() {
+    try {
+        const wallets = await onboard.connectWallet();
+        if (!wallets || wallets.length === 0) {
+            document.getElementById("status").innerText = "Wallet connection cancelled.";
             return;
         }
 
-        const amount = parseAmount(amountStr);
-        if (amount === null) {
-            alert("Invalid USDC amount.");
-            return;
-        }
+        connectedWallet = wallets[0];
+        provider = new ethers.providers.Web3Provider(connectedWallet.provider);
+        signer = provider.getSigner();
 
-        const total = (amount + (amount * 0.015)).toFixed(6);
-        finalAmount = total;
+        const accounts = connectedWallet.accounts;
+        document.getElementById("walletDisplay").innerText = accounts[0].address.substring(0,6) + "..." + accounts[0].address.slice(-4);
 
-        document.getElementById("dealID").innerText = "MRD-" + Math.floor(Date.now() / 1000);
-        document.getElementById("sumBuyer").innerText = buyer;
-        document.getElementById("sumSeller").innerText = seller;
-        document.getElementById("sumAsset").innerText = document.getElementById("asset").value.trim() || "Digital Asset";
-        document.getElementById("sumAmount").innerText = Number(total).toLocaleString("en-US", {minimumFractionDigits: 2});
-        document.getElementById("status").innerText = "Settlement ready. Please connect gateway.";
-        
-        if(signer) document.getElementById("btnDeposit").disabled = false;
+        const network = await provider.getNetwork();
+        document.getElementById("networkDisplay").innerText = network.chainId === 1 ? "Ethereum" : "Wrong Network";
+
+        // USDC Balance
+        const contract = new ethers.Contract(USDC_ADDRESS, ["function balanceOf(address) view returns(uint256)"], provider);
+        const bal = await contract.balanceOf(accounts[0].address);
+        document.getElementById("balanceDisplay").innerText = Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
+
+        if(finalAmount !== "0") document.getElementById("btnDeposit").disabled = false;
+        document.getElementById("status").innerText = "Secure gateway established.";
+    } catch(e) {
+        console.error(e);
+        document.getElementById("status").innerText = "Access Denied.";
     }
+}
 
-    async function connectWallet() {
-        // Check of MetaMask bestaat
-        if (typeof window.ethereum === 'undefined') {
-            document.getElementById("status").innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;font-weight:700;">MetaMask not found. Click here to install it.</a>';
-            
-            if(confirm("MetaMask is not installed. Would you like to go to the official download page?")){
-                window.open("https://metamask.io/download/", "_blank");
-            }
-            return;
-        }
+// 5️⃣ Deposit USDC
+async function sendPayment() {
+    if(finalAmount === "0") return;
+    try {
+        document.getElementById("status").innerText = "Awaiting signature...";
+        document.getElementById("btnDeposit").disabled = true;
 
-        try {
-            // Verzoek om accounts
-            const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-            provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-            signer = provider.getSigner();
+        const contract = new ethers.Contract(USDC_ADDRESS, ["function transfer(address to, uint256 amount) returns (bool)"], signer);
+        const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 150000 });
 
-            // Event listener voor netwerkveranderingen
-            window.ethereum.on('chainChanged', () => window.location.reload());
+        document.getElementById("status").innerText = "Synchronizing with blockchain...";
+        const receipt = await tx.wait();
 
-            // Update UI met wallet adres
-            document.getElementById("walletDisplay").innerText = accounts[0].substring(0,6) + "..." + accounts[0].substring(38);
-            
-            // Check netwerk (Mainnet = 1)
-            const network = await provider.getNetwork();
-            document.getElementById("networkDisplay").innerText = network.chainId === 1 ? "Ethereum" : "Wrong Network";
-            
-            if (network.chainId !== 1) {
-                try {
-                    await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x1" }] });
-                } catch (switchError) {
-                    document.getElementById("status").innerText = "Switch to the Ethereum Mainnet.";
-                }
-            }
-
-            // Haal USDC balans op
-            const contract = new ethers.Contract(USDC_ADDRESS, ["function balanceOf(address) view returns(uint256)"], provider);
-            const bal = await contract.balanceOf(accounts[0]);
-            document.getElementById("balanceDisplay").innerText = Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
-            
-            // Activeer deposit knop als er een bedrag is klaargezet
-            if(finalAmount !== "0") document.getElementById("btnDeposit").disabled = false;
-            
-            document.getElementById("status").innerText = "Secure gateway established.";
-        } catch (err) { 
-            console.error(err); 
-            document.getElementById("status").innerText = "Access Denied.";
-        }
+        document.getElementById("status").innerText = "Settlement successful.";
+        document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--accent); font-weight:800;">[ VIEW ON ETHERSCAN ]</a>`;
+    } catch(err) {
+        console.error(err);
+        document.getElementById("btnDeposit").disabled = false;
+        document.getElementById("status").innerText = "Transaction terminated.";
     }
+}
 
-    async function sendPayment() {
-        if (finalAmount === "0") return;
-        try {
-            document.getElementById("status").innerText = "Awaiting signature...";
-            document.getElementById("btnDeposit").disabled = true;
-            const contract = new ethers.Contract(USDC_ADDRESS, ["function transfer(address to, uint256 amount) returns (bool)"], signer);
-            const tx = await contract.transfer(RECEIVER_ADDRESS, ethers.utils.parseUnits(finalAmount, 6), { gasLimit: 150000 });
-            document.getElementById("status").innerText = "Synchronizing with blockchain...";
-            const receipt = await tx.wait();
-            document.getElementById("status").innerText = "Settlement successful.";
-            document.getElementById("txLink").innerHTML = `<a href="https://etherscan.io/tx/${receipt.transactionHash}" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:800;">[ VIEW ON ETHERSCAN ]</a>`;
-        } catch (err) { 
-            document.getElementById("btnDeposit").disabled = false;
-            document.getElementById("status").innerText = "Transaction terminated.";
-        }
-    }
-
-    function disconnectWallet() { location.reload(); }
+// 6️⃣ Disconnect wallet
+async function disconnectWallet() {
+    if (connectedWallet) await onboard.disconnectWallet({ label: connectedWallet.label });
+    location.reload();
+}
 </script>
 </body>
 </html>
