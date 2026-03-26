@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/core@2.14.0/dist/web3-onboard.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/injected-wallets@2.14.0/dist/injected-wallets.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@web3-onboard/walletconnect@2.14.0/dist/walletconnect.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Escrow Portal | MRDROWSE</title>
@@ -317,55 +320,70 @@
         if(signer) document.getElementById("btnDeposit").disabled = false;
     }
 
-    async function connectWallet() {
-        // Check of MetaMask bestaat
-        if (typeof window.ethereum === 'undefined') {
-            document.getElementById("status").innerHTML = '<a href="https://metamask.io/download/" target="_blank" style="color:#ef4444;text-decoration:underline;font-weight:700;">MetaMask not found. Click here to install it.</a>';
-            
-            if(confirm("MetaMask is not installed. Would you like to go to the official download page?")){
-                window.open("https://metamask.io/download/", "_blank");
-            }
-            return;
+  // --- MULTIWALLET V2 INIT ---
+const injected = InjectedWallets();
+const walletConnectModule = WalletConnectModule();
+
+const onboard = Onboard({
+    wallets: [injected, walletConnectModule],
+    chains: [
+        {
+            id: '0x1', // Ethereum Mainnet
+            token: 'ETH',
+            label: 'Ethereum Mainnet',
+            rpcUrl: 'https://mainnet.infura.io/v3/YOUR_INFURA_KEY' // vervang met je eigen RPC
         }
+    ]
+});
 
-        try {
-            // Verzoek om accounts
-            const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-            provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-            signer = provider.getSigner();
+let connectedWallet = null;
 
-            // Event listener voor netwerkveranderingen
-            window.ethereum.on('chainChanged', () => window.location.reload());
-
-            // Update UI met wallet adres
-            document.getElementById("walletDisplay").innerText = accounts[0].substring(0,6) + "..." + accounts[0].substring(38);
-            
-            // Check netwerk (Mainnet = 1)
-            const network = await provider.getNetwork();
-            document.getElementById("networkDisplay").innerText = network.chainId === 1 ? "Ethereum" : "Wrong Network";
-            
-            if (network.chainId !== 1) {
-                try {
-                    await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x1" }] });
-                } catch (switchError) {
-                    document.getElementById("status").innerText = "Switch to the Ethereum Mainnet.";
-                }
-            }
-
-            // Haal USDC balans op
-            const contract = new ethers.Contract(USDC_ADDRESS, ["function balanceOf(address) view returns(uint256)"], provider);
-            const bal = await contract.balanceOf(accounts[0]);
-            document.getElementById("balanceDisplay").innerText = Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
-            
-            // Activeer deposit knop als er een bedrag is klaargezet
-            if(finalAmount !== "0") document.getElementById("btnDeposit").disabled = false;
-            
-            document.getElementById("status").innerText = "Secure gateway established.";
-        } catch (err) { 
-            console.error(err); 
-            document.getElementById("status").innerText = "Access Denied.";
-        }
+async function connectWallet() {
+    try {
+        const wallets = await onboard.connectWallet();
+       if (!wallets || wallets.length === 0) {
+    // Check of gebruiker een injected wallet probeerde te gebruiken
+    if (!window.ethereum) {
+        alert("No injected wallet detected. Please install MetaMask (https://metamask.io/) to continue.");
+    } else {
+        alert("Wallet connection cancelled or no compatible wallet found.");
     }
+    document.getElementById("status").innerText = "Wallet connection cancelled.";
+    return;
+}
+        connectedWallet = wallets[0];
+        provider = new ethers.providers.Web3Provider(connectedWallet.provider);
+        signer = provider.getSigner();
+
+        const account = connectedWallet.accounts[0].address;
+        document.getElementById("walletDisplay").innerText = account.substring(0,6) + "..." + account.slice(-4);
+
+        const network = await provider.getNetwork();
+        document.getElementById("networkDisplay").innerText = network.chainId === 1 ? "Ethereum" : "Wrong Network";
+
+        // Haal USDC balans op
+        const contract = new ethers.Contract(USDC_ADDRESS, ["function balanceOf(address) view returns(uint256)"], provider);
+        const bal = await contract.balanceOf(account);
+        document.getElementById("balanceDisplay").innerText = Number(ethers.utils.formatUnits(bal, 6)).toLocaleString() + " USDC";
+
+        if(finalAmount !== "0") document.getElementById("btnDeposit").disabled = false;
+        document.getElementById("status").innerText = "Secure gateway established.";
+
+    } catch(err) {
+        console.error(err);
+        document.getElementById("status").innerText = "Access Denied.";
+    }
+}
+
+async function disconnectWallet() {
+    if (connectedWallet) await onboard.disconnectWallet({ label: connectedWallet.label });
+    location.reload();
+}
+// --- EINDE MULTIWALLET V2 ---
+
+
+
+
 
     async function sendPayment() {
         if (finalAmount === "0") return;
@@ -384,7 +402,6 @@
         }
     }
 
-    function disconnectWallet() { location.reload(); }
 </script>
 </body>
 </html>
